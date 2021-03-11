@@ -5,11 +5,12 @@ using UnityEngine;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.0")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.1")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
         public static ConfigEntry<bool> isEnabled;
+        public static ConfigEntry<int> nexusID;
         public static float defaultFOV = 65f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.0f);
         public static ConfigEntry<float> fov;
@@ -20,6 +21,7 @@ namespace CustomizableCamera
         private void Awake()
         {
             isEnabled = Config.Bind<bool>("- General -", "Enable Mod", true, "Enable or disable the mod");
+            nexusID = Config.Bind<int>("- General -", "NexusID", 396, "Nexus mod ID for updates");
             fov = Config.Bind<float>("Camera Settings", "FOV", defaultFOV, "The camera fov.");
             cameraX = Config.Bind<float>("Camera Settings", "CameraX", defaultPosition.x, "The third person camera x position.");
             cameraY = Config.Bind<float>("Camera Settings", "CameraY", defaultPosition.y, "The third person camera y position.");
@@ -28,7 +30,6 @@ namespace CustomizableCamera
         }
 
         public static void DoPatching() => new Harmony(nameof(CustomizableCamera)).PatchAll();
-
 
         [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
         public static class UpdateCameraPosition_Patch
