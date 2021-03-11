@@ -1,2 +1,2 @@
-# ValheimModding
+# ValheimMods
 Modding repository for Valheim
