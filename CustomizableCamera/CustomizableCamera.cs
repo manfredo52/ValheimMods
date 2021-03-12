@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.3")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.4")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -64,10 +64,11 @@ namespace CustomizableCamera
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
 
-        [HarmonyPatch(typeof(Player), "LateUpdate")]
-        public static class Player_FOV_LateUpdate_Patch
+        [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
+        public static class GameCamera_FOV_UpdateCameraPosition_Patch
         {
 
+            // Reimplement camera settings reset
             private static void resetCameraSettings(GameCamera __instance)
             {
                 __instance.m_fov = defaultFOV;
@@ -104,6 +105,7 @@ namespace CustomizableCamera
                 }
             }
 
+            // Change implementation for character crouching state. Target fov and state should be set when the user presses their crouch button (onCrouch?)
             private static void setValuesBasedOnCharacterState(Player __instance)
             {
                 __characterStatePrev = __characterState;
@@ -126,49 +128,62 @@ namespace CustomizableCamera
                 }
             }
 
-
-            private static void Postfix(Player __instance)
+            // Will have to change this implementation when adding in bow zoom.
+            // When changing back to third person, there is an fov change going on that may be irritating.
+            private static bool checkIfFirstPerson(GameCamera __instance, float ___m_distance)
             {
-                GameCamera camInstance = GameCamera.instance;
+                if (___m_distance <= 0.0)
+                    return true;
 
-                if (!camInstance)
+                return false;
+            }
+
+            private static void Postfix(GameCamera __instance, ref float ___m_distance)
+            {
+                Player localPlayer = Player.m_localPlayer;
+
+                if (!__instance || !localPlayer)
                     return;
 
                 if (!isEnabled.Value)
-                    resetCameraSettings(camInstance);
+                    resetCameraSettings(__instance);
 
-                setValuesBasedOnCharacterState(__instance);
-                targetFOVHasBeenReached = checkFOVLerpDuration(camInstance, timeFOV);
+                isFirstPerson = checkIfFirstPerson(__instance, ___m_distance);
 
-                if (targetFOVHasBeenReached == false)
-                {
-                    if (characterStateChanged == true)
+                if(!isFirstPerson) { 
+                    setValuesBasedOnCharacterState(localPlayer);
+                    targetFOVHasBeenReached = checkFOVLerpDuration(__instance, timeFOV);
+
+                    if (targetFOVHasBeenReached == false)
                     {
-                        timeFOV = 0;
-                        characterStateChanged = false;
-                    } 
-                    else 
-                    { 
-                        timeFOV += Time.deltaTime; 
+                        if (characterStateChanged == true)
+                        {
+                            timeFOV = 0;
+                            characterStateChanged = false;
+                        } 
+                        else 
+                        { 
+                            timeFOV += Time.deltaTime; 
+                        }
+
+                        if (__characterState == characterState.crouching)
+                        {
+                            moveToNewCameraFOV(__instance, targetFOV, timeFOV);
+                        }
+                        else
+                        {
+                            moveToNewCameraFOV(__instance, targetFOV, timeFOV); 
+                        }
                     }
 
                     if (__characterState == characterState.crouching)
                     {
-                        moveToNewCameraFOV(camInstance, targetFOV, timeFOV);
+                        moveToNewCameraPosition(__instance, new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value));
                     }
                     else
                     {
-                        moveToNewCameraFOV(camInstance, targetFOV, timeFOV); 
+                        moveToNewCameraPosition(__instance, new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value));
                     }
-                }
-
-                if (__characterState == characterState.crouching)
-                {
-                    moveToNewCameraPosition(camInstance, new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value));
-                }
-                else
-                {
-                    moveToNewCameraPosition(camInstance, new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value));
                 }
             }
         }
