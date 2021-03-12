@@ -1,12 +1,11 @@
-﻿using System;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
 using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.2")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.3")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -27,7 +26,23 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraSneakX;
         public static ConfigEntry<float> cameraSneakY;
         public static ConfigEntry<float> cameraSneakZ;
-        public static bool isSneaking;
+
+        public static float timeFOVDuration = 5.0f;
+        public static float timeFOV = 0;
+        public static float remainingTimeFOV = 0;
+        public static float targetFOV;
+        public static float lastSetFOV;
+        public static bool targetFOVHasBeenReached;
+        public static bool characterStateChanged;
+        public static bool isFirstPerson;
+
+        public enum characterState {
+            standing, 
+            crouching
+        };
+
+        public static characterState __characterState;
+        public static characterState __characterStatePrev;
 
         private void Awake()
         {
@@ -49,8 +64,8 @@ namespace CustomizableCamera
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
 
-        [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
-        public static class UpdateCameraPosition_Patch
+        [HarmonyPatch(typeof(Player), "LateUpdate")]
+        public static class Player_FOV_LateUpdate_Patch
         {
 
             private static void resetCameraSettings(GameCamera __instance)
@@ -61,33 +76,99 @@ namespace CustomizableCamera
 
             private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector)
             {
+                Vector3 currentVector = __instance.m_3rdOffset;
                 __instance.m_3rdOffset = targetVector;
             }
 
-            private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV)
+            private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
             {
-                __instance.m_fov = targetFOV;
+                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeFOVDuration);
+                lastSetFOV = __instance.m_fov;
             }
 
-            private static void Postfix(GameCamera __instance)
+            public static bool checkFOVLerpDuration(GameCamera __instance, float timeElapsed)
             {
-                if (!isEnabled.Value)
+                if (lastSetFOV == targetFOV)
                 {
-                    resetCameraSettings(__instance);
-                    return;
+                    __instance.m_fov = targetFOV;
+                    return true;
+                } 
+                else if (timeElapsed >= timeFOVDuration)
+                {
+                    timeFOV = 0;                   
+                    return true;
+                } 
+                else
+                {
+                    return false;
                 }
+            }
 
-                Player localPlayer = Player.m_localPlayer;
+            private static void setValuesBasedOnCharacterState(Player __instance)
+            {
+                __characterStatePrev = __characterState;
 
-                if (localPlayer.IsCrouching())
+                if (__instance.IsCrouching())
                 {
-                    moveToNewCameraFOV(__instance, cameraSneakFOV.Value);
-                    moveToNewCameraPosition(__instance, new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value));
+                    targetFOV = cameraSneakFOV.Value;
+                    __characterState = characterState.crouching;
                 }
                 else
                 {
-                    moveToNewCameraFOV(__instance, cameraFOV.Value);
-                    moveToNewCameraPosition(__instance, new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value));
+                    targetFOV = cameraFOV.Value;
+                    __characterState = characterState.standing;
+                }
+
+                if (__characterState != __characterStatePrev)
+                {
+                    characterStateChanged = true;
+                    __characterStatePrev = __characterState;
+                }
+            }
+
+
+            private static void Postfix(Player __instance)
+            {
+                GameCamera camInstance = GameCamera.instance;
+
+                if (!camInstance)
+                    return;
+
+                if (!isEnabled.Value)
+                    resetCameraSettings(camInstance);
+
+                setValuesBasedOnCharacterState(__instance);
+                targetFOVHasBeenReached = checkFOVLerpDuration(camInstance, timeFOV);
+
+                if (targetFOVHasBeenReached == false)
+                {
+                    if (characterStateChanged == true)
+                    {
+                        timeFOV = 0;
+                        characterStateChanged = false;
+                    } 
+                    else 
+                    { 
+                        timeFOV += Time.deltaTime; 
+                    }
+
+                    if (__characterState == characterState.crouching)
+                    {
+                        moveToNewCameraFOV(camInstance, targetFOV, timeFOV);
+                    }
+                    else
+                    {
+                        moveToNewCameraFOV(camInstance, targetFOV, timeFOV); 
+                    }
+                }
+
+                if (__characterState == characterState.crouching)
+                {
+                    moveToNewCameraPosition(camInstance, new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value));
+                }
+                else
+                {
+                    moveToNewCameraPosition(camInstance, new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value));
                 }
             }
         }

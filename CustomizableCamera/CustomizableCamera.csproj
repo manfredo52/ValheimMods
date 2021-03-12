@@ -54,6 +54,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\CameraMod\libs\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>D:\Games\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>..\..\CameraMod\libs\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
