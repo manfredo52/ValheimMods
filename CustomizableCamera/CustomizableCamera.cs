@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.4")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.5")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -27,12 +27,20 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraSneakY;
         public static ConfigEntry<float> cameraSneakZ;
 
-        public static float timeFOVDuration = 5.0f;
+        // Variables for FOV linear interpolation
+        public static float timeFOVDuration = 3.0f;
         public static float timeFOV = 0;
-        public static float remainingTimeFOV = 0;
         public static float targetFOV;
         public static float lastSetFOV;
         public static bool targetFOVHasBeenReached;
+
+        // Variables for camera position linear interpolation
+        public static float timeCameraPosDuration = 3.0f;
+        public static float timeCameraPos = 0;
+        public static Vector3 targetPos;
+        public static Vector3 lastSetPos;
+        public static bool targetPosHasBeenReached;
+
         public static bool characterStateChanged;
         public static bool isFirstPerson;
 
@@ -75,10 +83,10 @@ namespace CustomizableCamera
                 __instance.m_3rdOffset = defaultPosition;
             }
 
-            private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector)
+            private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
             {
-                Vector3 currentVector = __instance.m_3rdOffset;
-                __instance.m_3rdOffset = targetVector;
+                __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration);
+                lastSetPos = __instance.m_3rdOffset;
             }
 
             private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
@@ -105,6 +113,25 @@ namespace CustomizableCamera
                 }
             }
 
+            public static bool checkCameraLerpDuration(GameCamera __instance, float timeElapsed)
+            {
+                if (lastSetPos == targetPos)
+                {
+                    __instance.m_3rdOffset = targetPos;
+                    return true;
+                }
+                else if (timeElapsed >= timeCameraPosDuration)
+                {
+                    timeCameraPos = 0;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+ 
             // Change implementation for character crouching state. Target fov and state should be set when the user presses their crouch button (onCrouch?)
             private static void setValuesBasedOnCharacterState(Player __instance)
             {
@@ -113,11 +140,13 @@ namespace CustomizableCamera
                 if (__instance.IsCrouching())
                 {
                     targetFOV = cameraSneakFOV.Value;
+                    targetPos = new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value);
                     __characterState = characterState.crouching;
                 }
                 else
                 {
                     targetFOV = cameraFOV.Value;
+                    targetPos = new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value);
                     __characterState = characterState.standing;
                 }
 
@@ -129,7 +158,7 @@ namespace CustomizableCamera
             }
 
             // Will have to change this implementation when adding in bow zoom.
-            // When changing back to third person, there is an fov change going on that may be irritating.
+            // When changing back to third person, there is an fov change going on that may be irritating. Not important.
             private static bool checkIfFirstPerson(GameCamera __instance, float ___m_distance)
             {
                 if (___m_distance <= 0.0)
@@ -150,7 +179,7 @@ namespace CustomizableCamera
 
                 isFirstPerson = checkIfFirstPerson(__instance, ___m_distance);
 
-                if(!isFirstPerson) { 
+                if (!isFirstPerson) {
                     setValuesBasedOnCharacterState(localPlayer);
                     targetFOVHasBeenReached = checkFOVLerpDuration(__instance, timeFOV);
 
@@ -159,11 +188,11 @@ namespace CustomizableCamera
                         if (characterStateChanged == true)
                         {
                             timeFOV = 0;
-                            characterStateChanged = false;
-                        } 
-                        else 
-                        { 
-                            timeFOV += Time.deltaTime; 
+                            //characterStateChanged = false;
+                        }
+                        else
+                        {
+                            timeFOV += Time.deltaTime;
                         }
 
                         if (__characterState == characterState.crouching)
@@ -172,17 +201,32 @@ namespace CustomizableCamera
                         }
                         else
                         {
-                            moveToNewCameraFOV(__instance, targetFOV, timeFOV); 
+                            moveToNewCameraFOV(__instance, targetFOV, timeFOV);
                         }
                     }
 
-                    if (__characterState == characterState.crouching)
+                    targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
+
+                    if (targetPosHasBeenReached == false) 
                     {
-                        moveToNewCameraPosition(__instance, new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value));
-                    }
-                    else
-                    {
-                        moveToNewCameraPosition(__instance, new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value));
+                        if (characterStateChanged == true)
+                        {
+                            timeCameraPos = 0;
+                            characterStateChanged = false;
+                        }
+                        else
+                        {
+                            timeCameraPos += Time.deltaTime;
+                        }
+
+                        if (__characterState == characterState.crouching)
+                        {
+                            moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
+                        }
+                        else
+                        {
+                            moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
+                        }
                     }
                 }
             }
