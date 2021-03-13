@@ -3,9 +3,11 @@ using BepInEx.Configuration;
 using UnityEngine;
 using HarmonyLib;
 
+// To-Do:
+//  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.5")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.6")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -27,6 +29,15 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraSneakY;
         public static ConfigEntry<float> cameraSneakZ;
 
+        // Boat Camera Settings
+        public static ConfigEntry<float> cameraBoatFOV;
+        public static ConfigEntry<float> cameraBoatX;
+        public static ConfigEntry<float> cameraBoatY;
+        public static ConfigEntry<float> cameraBoatZ;
+
+        // Linear Interpolation Settings
+        public static float timeDuration = 3.0f;
+
         // Variables for FOV linear interpolation
         public static float timeFOVDuration = 3.0f;
         public static float timeFOV = 0;
@@ -42,11 +53,15 @@ namespace CustomizableCamera
         public static bool targetPosHasBeenReached;
 
         public static bool characterStateChanged;
+        public static bool characterIsControllingShip;
         public static bool isFirstPerson;
 
         public enum characterState {
-            standing, 
-            crouching
+            standing,
+            sprinting,
+            crouching,
+            sailing,
+            aiming
         };
 
         public static characterState __characterState;
@@ -67,6 +82,11 @@ namespace CustomizableCamera
             cameraSneakY = Config.Bind<float>("Camera Settings - Sneak", "CameraSneakY", defaultPosition.y, "Camera Y position when sneaking.");
             cameraSneakZ = Config.Bind<float>("Camera Settings - Sneak", "CameraSneakZ", defaultPosition.z, "Camera Z position when sneaking.");
 
+            cameraBoatFOV = Config.Bind<float>("Camera Settings - Sailing", "BoatFOV", defaultFOV, "Camera fov when sailing.");
+            cameraBoatX = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatX", defaultPosition.x, "Camera X position when sailing.");
+            cameraBoatY = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
+            cameraBoatZ = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
+
             DoPatching();
         }
 
@@ -85,13 +105,13 @@ namespace CustomizableCamera
 
             private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
             {
-                __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration);
+                __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeDuration);
                 lastSetPos = __instance.m_3rdOffset;
             }
 
             private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
             {
-                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeFOVDuration);
+                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeDuration);
                 lastSetFOV = __instance.m_fov;
             }
 
@@ -102,7 +122,7 @@ namespace CustomizableCamera
                     __instance.m_fov = targetFOV;
                     return true;
                 } 
-                else if (timeElapsed >= timeFOVDuration)
+                else if (timeElapsed >= timeDuration)
                 {
                     timeFOV = 0;                   
                     return true;
@@ -120,7 +140,7 @@ namespace CustomizableCamera
                     __instance.m_3rdOffset = targetPos;
                     return true;
                 }
-                else if (timeElapsed >= timeCameraPosDuration)
+                else if (timeElapsed >= timeDuration)
                 {
                     timeCameraPos = 0;
                     return true;
@@ -137,7 +157,13 @@ namespace CustomizableCamera
             {
                 __characterStatePrev = __characterState;
 
-                if (__instance.IsCrouching())
+                if (characterIsControllingShip)
+                {
+                    targetFOV = cameraBoatFOV.Value;
+                    targetPos = new Vector3(cameraBoatX.Value, cameraBoatY.Value, cameraBoatZ.Value);
+                    __characterState = characterState.sailing;
+                }
+                else if (__instance.IsCrouching())
                 {
                     targetFOV = cameraSneakFOV.Value;
                     targetPos = new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value);
@@ -183,33 +209,21 @@ namespace CustomizableCamera
                     setValuesBasedOnCharacterState(localPlayer);
                     targetFOVHasBeenReached = checkFOVLerpDuration(__instance, timeFOV);
 
-                    if (targetFOVHasBeenReached == false)
+                    if (!targetFOVHasBeenReached)
                     {
-                        if (characterStateChanged == true)
-                        {
+                        if (characterStateChanged)
                             timeFOV = 0;
-                            //characterStateChanged = false;
-                        }
                         else
-                        {
                             timeFOV += Time.deltaTime;
-                        }
 
-                        if (__characterState == characterState.crouching)
-                        {
-                            moveToNewCameraFOV(__instance, targetFOV, timeFOV);
-                        }
-                        else
-                        {
-                            moveToNewCameraFOV(__instance, targetFOV, timeFOV);
-                        }
+                        moveToNewCameraFOV(__instance, targetFOV, timeFOV);
                     }
 
                     targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
 
-                    if (targetPosHasBeenReached == false) 
+                    if (!targetPosHasBeenReached) 
                     {
-                        if (characterStateChanged == true)
+                        if (characterStateChanged)
                         {
                             timeCameraPos = 0;
                             characterStateChanged = false;
@@ -219,14 +233,7 @@ namespace CustomizableCamera
                             timeCameraPos += Time.deltaTime;
                         }
 
-                        if (__characterState == characterState.crouching)
-                        {
-                            moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
-                        }
-                        else
-                        {
-                            moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
-                        }
+                        moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
                     }
                 }
             }
