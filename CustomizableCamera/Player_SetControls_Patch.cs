@@ -4,16 +4,16 @@ using HarmonyLib;
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(Player), "SetControls")]
-    public static class Player_SetControls_Patch
+    public class Player_SetControls_Patch : CustomizableCamera
     {
         // Fix crouch bug when player is drawing a bow.
         public static bool isPlayerAbleToCrouch;
 
         private static void Postfix(Player __instance, bool attack, bool attackHold, bool secondaryAttack, bool block, bool blockHold, bool jump, bool crouch, bool run, bool autoRun)
         {
-            if (CustomizableCamera.characterCrouched && crouch)
+            if (characterCrouched && crouch)
             {
-                CustomizableCamera.characterCrouched = false;
+                characterCrouched = false;
                 return;
             }
 
@@ -23,7 +23,7 @@ namespace CustomizableCamera
                 isPlayerAbleToCrouch = true;
 
             if (isPlayerAbleToCrouch && crouch)
-                CustomizableCamera.characterCrouched = true;
+                characterCrouched = true;
         }
     }
 }

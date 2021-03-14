@@ -4,20 +4,20 @@ using HarmonyLib;
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(Player), "StartShipControl")]
-    public static class Player_StartShipControl_Patch
+    public class Player_StartShipControl_Patch : CustomizableCamera
     {
         private static void Postfix(Player __instance)
         {
-            CustomizableCamera.characterControlledShip = true;
+            characterControlledShip = true;
         }
     }
 
     [HarmonyPatch(typeof(Player), "StopShipControl")]
-    public static class Player_StopShipControl_Patch
+    public class Player_StopShipControl_Patch : CustomizableCamera
     {
         private static void Postfix(Player __instance)
         {
-            CustomizableCamera.characterControlledShip = false;
+            characterControlledShip = false;
         }
     }
 }
