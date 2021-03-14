@@ -14,14 +14,6 @@ namespace CustomizableCamera
             __instance.m_3rdOffset = defaultPosition;
         }
 
-        // Needed compatability for first person mod? Doesn't seem like it.
-        private static void setMiscCameraSettings(GameCamera __instance)
-        {
-            __instance.m_smoothness = cameraSmoothness.Value;
-            __instance.m_maxDistance = cameraMaxDistance.Value;
-            __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
-        }
-
         private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
         {
             __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration.Value);
@@ -122,7 +114,6 @@ namespace CustomizableCamera
             if (!isEnabled.Value)
                 resetCameraSettings(__instance);
 
-            setMiscCameraSettings(__instance);// remove
             isFirstPerson = checkIfFirstPerson(__instance, ___m_distance);
 
             if (!isFirstPerson)

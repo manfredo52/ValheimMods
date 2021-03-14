@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Setup all settings on awake.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.8")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.9")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -41,7 +41,6 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraBoatY;
         public static ConfigEntry<float> cameraBoatZ;
 
-        // TO-DO: Set this on game camera awake and when player goes into settings
         // Other Camera Settings
         public static ConfigEntry<float> cameraSmoothness;
         public static ConfigEntry<float> cameraMaxDistance;
@@ -86,12 +85,13 @@ namespace CustomizableCamera
             isEnabled   = Config.Bind<bool>("- General -", "Enable Mod", true, "Enable or disable the mod");
             nexusID     = Config.Bind<int>("- General -", "NexusID", 396, "Nexus mod ID for updates");
 
+            // These misc options will only take effect on game camera awake and when you save the game settings in the menu.
             cameraSmoothness        = Config.Bind<float>("- Misc -", "cameraSmoothness", defaultSmoothness, new ConfigDescription("Camera smoothing. Determines how smoothly/quickly the camera will follow your player.", new AcceptableValueRange<float>(0, 20f)));
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 
-            timeFOVDuration         = Config.Bind<float>("- Misc -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
-            timeCameraPosDuration   = Config.Bind<float>("- Misc -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));      
+            timeFOVDuration         = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
+            timeCameraPosDuration   = Config.Bind<float>("- Misc Time Values -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));      
 
             cameraFOV       = Config.Bind<float>("Camera Settings", "cameraFOV", defaultFOV, "The camera fov.");
             cameraX         = Config.Bind<float>("Camera Settings", "cameraX", defaultPosition.x, "The third person camera x position.");
@@ -111,6 +111,26 @@ namespace CustomizableCamera
             DoPatching();
         }
 
+        // Needed compatability for first person mod? Doesn't seem like it.
+        private static void setMiscCameraSettings(GameCamera __instance)
+        {
+            __instance.m_smoothness = cameraSmoothness.Value;
+            __instance.m_maxDistance = cameraMaxDistance.Value;
+            __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
+        }
+
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
+
+        [HarmonyPatch(typeof(GameCamera), "Awake")]
+        public static class GameCamera_Awake_Patch
+        {
+            private static void Postfix(GameCamera __instance) => setMiscCameraSettings(__instance);
+        }
+
+        [HarmonyPatch(typeof(GameCamera), "ApplySettings")]
+        private static class GameCamera_ApplySettings_Patch
+        {
+            private static void Postfix(GameCamera __instance) => setMiscCameraSettings(__instance);
+        }
     }
 }
