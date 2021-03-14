@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Setup all settings on awake.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.9")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.0")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -20,7 +20,9 @@ namespace CustomizableCamera
         public static int defaultCameraMaxDistanceBoat = 16;
         public static float defaultSmoothness = 0.1f;
         public static float defaultFOV = 65.0f;
+        public static float defaultBowZoomFOV = 55.0f; 
         public static float defaultTimeDuration = 5.0f;
+        public static float defaultBowZoomTimeDuration = 3.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
 
         // Normal Camera Settings
@@ -41,6 +43,19 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraBoatY;
         public static ConfigEntry<float> cameraBoatZ;
 
+        // Bow Camera Setting
+        public static ConfigEntry<bool> cameraBowSettingsEnabled;
+        public static ConfigEntry<float> cameraBowX;
+        public static ConfigEntry<float> cameraBowY;
+        public static ConfigEntry<float> cameraBowZ;
+
+        // Bow Zoom Camera Settings
+        public static ConfigEntry<bool> bowZoomEnabled;
+        public static ConfigEntry<bool> bowZoomOnDraw;
+        public static ConfigEntry<KeyboardShortcut> bowZoomKey;
+        public static ConfigEntry<KeyboardShortcut> bowCancelDrawKey;
+        public static ConfigEntry<float> cameraBowZoomFOV;
+
         // Other Camera Settings
         public static ConfigEntry<float> cameraSmoothness;
         public static ConfigEntry<float> cameraMaxDistance;
@@ -48,6 +63,8 @@ namespace CustomizableCamera
 
         // Linear Interpolation Settings
         public static ConfigEntry<float> timeFOVDuration;
+        public static ConfigEntry<float> timeBowZoomFOVDuration;
+        public static ConfigEntry<interpolationTypes> timeBowZoomInterpolationType;
         public static ConfigEntry<float> timeCameraPosDuration;
 
         // Variables for FOV linear interpolation
@@ -62,17 +79,27 @@ namespace CustomizableCamera
         public static Vector3 lastSetPos;
         public static bool targetPosHasBeenReached;
 
+        // State changing
         public static bool characterStateChanged;
         public static bool characterControlledShip;
         public static bool characterCrouched;
+        public static bool characterAiming;
+        public static bool characterEquippedBow;
+
         public static bool isFirstPerson;
+
+        public enum interpolationTypes
+        {
+            Linear,
+            SmoothStep
+        }
 
         public enum characterState {
             standing,
             sprinting,
             crouching,
             sailing,
-            bowdrawn,
+            bowequipped,
             bowaiming
         };
 
@@ -90,8 +117,10 @@ namespace CustomizableCamera
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 
-            timeFOVDuration         = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
-            timeCameraPosDuration   = Config.Bind<float>("- Misc Time Values -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));      
+            timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
+            timeBowZoomFOVDuration       = Config.Bind<float>("- Misc Time Values -", "timeBowZoomFOVDuration", defaultBowZoomTimeDuration, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0.001f, 50f)));
+            timeBowZoomInterpolationType = Config.Bind<interpolationTypes>("- Misc Time Values -", "timeBowZoomInterpolationType", interpolationTypes.Linear, new ConfigDescription("Interpolation method for the bow zoom."));
+            timeCameraPosDuration        = Config.Bind<float>("- Misc Time Values -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));      
 
             cameraFOV       = Config.Bind<float>("Camera Settings", "cameraFOV", defaultFOV, "The camera fov.");
             cameraX         = Config.Bind<float>("Camera Settings", "cameraX", defaultPosition.x, "The third person camera x position.");
@@ -108,10 +137,20 @@ namespace CustomizableCamera
             cameraBoatY     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
             cameraBoatZ     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
 
+            cameraBowSettingsEnabled = Config.Bind<bool>("Camera Settings - Bow", "bowSettingsEnable", false, "Enable or disable if there should be separate camera settings when holding a bow.");
+            cameraBowX = Config.Bind<float>("Camera Settings - Bow", "cameraBowX", defaultPosition.x, "Camera X position when holding a bow.");
+            cameraBowY = Config.Bind<float>("Camera Settings - Bow", "cameraBowY", defaultPosition.y, "Camera Y position when holding a bow.");
+            cameraBowZ = Config.Bind<float>("Camera Settings - Bow", "cameraBowZ", defaultPosition.z, "Camera Z position when holding a bow.");
+
+            bowZoomEnabled      = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomEnable", false, "Enable or disable bow zoom");
+            bowZoomOnDraw       = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomOnDraw", true, "Zoom in automatically when drawing the bow.");
+            bowZoomKey          = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowZoomKey", new KeyboardShortcut(KeyCode.Mouse1), "Keyboard shortcut or mouse button for zooming in with the bow.");
+            bowCancelDrawKey    = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
+            cameraBowZoomFOV    = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
+
             DoPatching();
         }
 
-        // Needed compatability for first person mod? Doesn't seem like it.
         private static void setMiscCameraSettings(GameCamera __instance)
         {
             __instance.m_smoothness = cameraSmoothness.Value;

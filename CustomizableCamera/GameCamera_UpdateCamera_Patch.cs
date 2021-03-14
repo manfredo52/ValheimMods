@@ -26,6 +26,16 @@ namespace CustomizableCamera
             lastSetFOV = __instance.m_fov;
         }
 
+        private static void moveToNewCameraFOVBowZoom(GameCamera __instance, float targetFOV, float time, interpolationTypes interpType)
+        {
+            if (interpType == interpolationTypes.SmoothStep)
+                __instance.m_fov = Mathf.SmoothStep(lastSetFOV, targetFOV, time / timeBowZoomFOVDuration.Value);
+            else
+                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeBowZoomFOVDuration.Value);
+
+            lastSetFOV = __instance.m_fov;
+        }
+
         public static bool checkFOVLerpDuration(GameCamera __instance, float timeElapsed)
         {
             if (lastSetFOV == targetFOV)
@@ -62,17 +72,31 @@ namespace CustomizableCamera
             }
         }
 
-
-        // Change implementation for character crouching state. Target fov and state should be set when the user presses their crouch button (onCrouch?)
         private static void setValuesBasedOnCharacterState(Player __instance)
         {
             __characterStatePrev = __characterState;
 
-            if (characterControlledShip)
+            if (characterAiming && bowZoomEnabled.Value)
+            {
+                targetFOV = cameraBowZoomFOV.Value;
+                if (characterEquippedBow && cameraBowSettingsEnabled.Value)
+                    targetPos = new Vector3(cameraBowX.Value, cameraBowY.Value, cameraBowZ.Value);
+                else
+                    targetPos = new Vector3(cameraX.Value, cameraY.Value, cameraZ.Value);
+                __characterState = characterState.bowaiming;
+            }
+            else if (characterControlledShip)
             {
                 targetFOV = cameraBoatFOV.Value;
                 targetPos = new Vector3(cameraBoatX.Value, cameraBoatY.Value, cameraBoatZ.Value);
                 __characterState = characterState.sailing;
+            }
+            else if (characterEquippedBow && cameraBowSettingsEnabled.Value)
+            {
+                targetFOV = cameraFOV.Value;
+                targetPos = new Vector3(cameraBowX.Value, cameraBowY.Value, cameraBowZ.Value);
+                __characterState = characterState.bowequipped;
+
             }
             else if (characterCrouched)
             {
@@ -92,10 +116,13 @@ namespace CustomizableCamera
                 characterStateChanged = true;
                 __characterStatePrev = __characterState;
             }
+            else
+            {
+                characterStateChanged = false;
+            }
         }
 
-        // Will have to change this implementation when adding in bow zoom.
-        // When changing back to third person, there is an fov change going on that may be irritating. Not important.
+        // Implement compatability for first person bow zoom.
         private static bool checkIfFirstPerson(GameCamera __instance, float ___m_distance)
         {
             if (___m_distance <= 0.0)
@@ -104,6 +131,7 @@ namespace CustomizableCamera
             return false;
         }
 
+        // FOV flicker when bow is zoomed in for too long.
         private static void Postfix(GameCamera __instance, ref float ___m_distance)
         {
             Player localPlayer = Player.m_localPlayer;
@@ -128,7 +156,10 @@ namespace CustomizableCamera
                     else
                         timeFOV += Time.deltaTime;
 
-                    moveToNewCameraFOV(__instance, targetFOV, timeFOV);
+                    if (characterAiming)
+                        moveToNewCameraFOVBowZoom(__instance, targetFOV, localPlayer.GetAttackDrawPercentage(), timeBowZoomInterpolationType.Value);
+                    else
+                        moveToNewCameraFOV(__instance, targetFOV, timeFOV);
                 }
 
                 targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
@@ -136,14 +167,9 @@ namespace CustomizableCamera
                 if (!targetPosHasBeenReached)
                 {
                     if (characterStateChanged)
-                    {
                         timeCameraPos = 0;
-                        characterStateChanged = false;
-                    }
                     else
-                    {
                         timeCameraPos += Time.deltaTime;
-                    }
 
                     moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
                 }
