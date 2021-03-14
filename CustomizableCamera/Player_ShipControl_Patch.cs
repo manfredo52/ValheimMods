@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using HarmonyLib;
 
-// To-do:
-//  Save player's original camera zoom distance state.
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(Player), "StartShipControl")]
@@ -10,7 +8,7 @@ namespace CustomizableCamera
     {
         private static void Postfix(Player __instance)
         {
-            CustomizableCamera.characterIsControllingShip = true;
+            CustomizableCamera.characterControlledShip = true;
         }
     }
 
@@ -19,7 +17,7 @@ namespace CustomizableCamera
     {
         private static void Postfix(Player __instance)
         {
-            CustomizableCamera.characterIsControllingShip = false;
+            CustomizableCamera.characterControlledShip = false;
         }
     }
 }

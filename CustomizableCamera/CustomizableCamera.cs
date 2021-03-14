@@ -5,16 +5,21 @@ using HarmonyLib;
 
 // To-Do:
 //  Linear interpolation for switching camera zoom distance.
+//  Setup all settings on awake.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.6")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.0.7")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
         public static ConfigEntry<bool> isEnabled;
         public static ConfigEntry<int> nexusID;
 
+        public static float defaultCameraMaxDistance = 8;
+        public static float defaultCameraMaxDistanceBoat = 16;
+        public static float defaultSmoothness = 0.1f;
         public static float defaultFOV = 65.0f;
+        public static float defaultTimeDuration = 4.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
 
         // Normal Camera Settings
@@ -35,25 +40,31 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraBoatY;
         public static ConfigEntry<float> cameraBoatZ;
 
+        // TO-DO: Set this on game camera awake and when player goes into settings
+        // Other Camera Settings
+        public static ConfigEntry<float> cameraSmoothness;
+        public static ConfigEntry<float> cameraMaxDistance;
+        public static ConfigEntry<float> cameraMaxDistanceBoat;
+
         // Linear Interpolation Settings
-        public static float timeDuration = 3.0f;
+        public static ConfigEntry<float> timeFOVDuration;
+        public static ConfigEntry<float> timeCameraPosDuration;
 
         // Variables for FOV linear interpolation
-        public static float timeFOVDuration = 3.0f;
         public static float timeFOV = 0;
         public static float targetFOV;
         public static float lastSetFOV;
         public static bool targetFOVHasBeenReached;
 
         // Variables for camera position linear interpolation
-        public static float timeCameraPosDuration = 3.0f;
         public static float timeCameraPos = 0;
         public static Vector3 targetPos;
         public static Vector3 lastSetPos;
         public static bool targetPosHasBeenReached;
 
         public static bool characterStateChanged;
-        public static bool characterIsControllingShip;
+        public static bool characterControlledShip;
+        public static bool characterCrouched;
         public static bool isFirstPerson;
 
         public enum characterState {
@@ -61,7 +72,8 @@ namespace CustomizableCamera
             sprinting,
             crouching,
             sailing,
-            aiming
+            bowdrawn,
+            bowaiming
         };
 
         public static characterState __characterState;
@@ -69,23 +81,31 @@ namespace CustomizableCamera
 
         private void Awake()
         {
-            isEnabled = Config.Bind<bool>("- General -", "Enable Mod", true, "Enable or disable the mod");
-            nexusID = Config.Bind<int>("- General -", "NexusID", 396, "Nexus mod ID for updates");
+            // All settings start off with the game's original values.
+            isEnabled   = Config.Bind<bool>("- General -", "Enable Mod", true, "Enable or disable the mod");
+            nexusID     = Config.Bind<int>("- General -", "NexusID", 396, "Nexus mod ID for updates");
 
-            cameraFOV = Config.Bind<float>("Camera Settings", "FOV", defaultFOV, "The camera fov.");
-            cameraX = Config.Bind<float>("Camera Settings", "CameraX", defaultPosition.x, "The third person camera x position.");
-            cameraY = Config.Bind<float>("Camera Settings", "CameraY", defaultPosition.y, "The third person camera y position.");
-            cameraZ = Config.Bind<float>("Camera Settings", "CameraZ", defaultPosition.z, "The third person camera z position.");
+            cameraSmoothness        = Config.Bind<float>("- Misc -", "cameraSmoothness", defaultSmoothness, "Camera smoothing. Determines how smoothly/quickly the camera will follow your player.");
+            cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, "Maximum distance you can zoom out.");
+            cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, "Maximum distance you can zoom out when on a boat.");
 
-            cameraSneakFOV = Config.Bind<float>("Camera Settings - Sneak", "SneakFOV", defaultFOV, "Camera fov when sneaking.");
-            cameraSneakX = Config.Bind<float>("Camera Settings - Sneak", "CameraSneakX", defaultPosition.x, "Camera X position when sneaking.");
-            cameraSneakY = Config.Bind<float>("Camera Settings - Sneak", "CameraSneakY", defaultPosition.y, "Camera Y position when sneaking.");
-            cameraSneakZ = Config.Bind<float>("Camera Settings - Sneak", "CameraSneakZ", defaultPosition.z, "Camera Z position when sneaking.");
+            timeFOVDuration         = Config.Bind<float>("- Misc -", "timeFOVDuration", defaultTimeDuration, "How quickly the fov changes.");
+            timeCameraPosDuration   = Config.Bind<float>("- Misc -", "timeCameraPosDuration", defaultTimeDuration, "How quickly the camera moves to the new camera position");
 
-            cameraBoatFOV = Config.Bind<float>("Camera Settings - Sailing", "BoatFOV", defaultFOV, "Camera fov when sailing.");
-            cameraBoatX = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatX", defaultPosition.x, "Camera X position when sailing.");
-            cameraBoatY = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
-            cameraBoatZ = Config.Bind<float>("Camera Settings - Sailing", "CameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
+            cameraFOV       = Config.Bind<float>("Camera Settings", "cameraFOV", defaultFOV, "The camera fov.");
+            cameraX         = Config.Bind<float>("Camera Settings", "cameraX", defaultPosition.x, "The third person camera x position.");
+            cameraY         = Config.Bind<float>("Camera Settings", "cameraY", defaultPosition.y, "The third person camera y position.");
+            cameraZ         = Config.Bind<float>("Camera Settings", "cameraZ", defaultPosition.z, "The third person camera z position.");
+
+            cameraSneakFOV  = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakFOV", defaultFOV, "Camera fov when sneaking.");
+            cameraSneakX    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakX", defaultPosition.x, "Camera X position when sneaking.");
+            cameraSneakY    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakY", defaultPosition.y, "Camera Y position when sneaking.");
+            cameraSneakZ    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakZ", defaultPosition.z, "Camera Z position when sneaking.");
+
+            cameraBoatFOV   = Config.Bind<float>("Camera Settings - Boat", "cameraBoatFOV", defaultFOV, "Camera fov when sailing.");
+            cameraBoatX     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatX", defaultPosition.x, "Camera X position when sailing.");
+            cameraBoatY     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
+            cameraBoatZ     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
 
             DoPatching();
         }
@@ -93,7 +113,7 @@ namespace CustomizableCamera
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
 
         [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
-        public static class GameCamera_FOV_UpdateCameraPosition_Patch
+        public static class GameCamera_UpdateCamera_Patch
         {
 
             // Reimplement camera settings reset
@@ -103,15 +123,23 @@ namespace CustomizableCamera
                 __instance.m_3rdOffset = defaultPosition;
             }
 
+            // Needed compatability for first person mod? Doesn't seem like it.
+            private static void setMiscCameraSettings(GameCamera __instance)
+            {
+                __instance.m_smoothness = cameraSmoothness.Value;
+                __instance.m_maxDistance = cameraMaxDistance.Value;
+                __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
+            }
+
             private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
             {
-                __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeDuration);
+                __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration.Value);
                 lastSetPos = __instance.m_3rdOffset;
             }
 
             private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
             {
-                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeDuration);
+                __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeFOVDuration.Value);
                 lastSetFOV = __instance.m_fov;
             }
 
@@ -122,7 +150,7 @@ namespace CustomizableCamera
                     __instance.m_fov = targetFOV;
                     return true;
                 } 
-                else if (timeElapsed >= timeDuration)
+                else if (timeElapsed >= timeFOVDuration.Value)
                 {
                     timeFOV = 0;                   
                     return true;
@@ -140,7 +168,7 @@ namespace CustomizableCamera
                     __instance.m_3rdOffset = targetPos;
                     return true;
                 }
-                else if (timeElapsed >= timeDuration)
+                else if (timeElapsed >= timeCameraPosDuration.Value)
                 {
                     timeCameraPos = 0;
                     return true;
@@ -157,13 +185,13 @@ namespace CustomizableCamera
             {
                 __characterStatePrev = __characterState;
 
-                if (characterIsControllingShip)
+                if (characterControlledShip)
                 {
                     targetFOV = cameraBoatFOV.Value;
                     targetPos = new Vector3(cameraBoatX.Value, cameraBoatY.Value, cameraBoatZ.Value);
                     __characterState = characterState.sailing;
                 }
-                else if (__instance.IsCrouching())
+                else if (characterCrouched)
                 {
                     targetFOV = cameraSneakFOV.Value;
                     targetPos = new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value);
@@ -203,6 +231,7 @@ namespace CustomizableCamera
                 if (!isEnabled.Value)
                     resetCameraSettings(__instance);
 
+                setMiscCameraSettings(__instance);// remove
                 isFirstPerson = checkIfFirstPerson(__instance, ___m_distance);
 
                 if (!isFirstPerson) {
