@@ -8,6 +8,7 @@ namespace CustomizableCamera
     public class GameCamera_UpdateCamera_Patch : CustomizableCamera
     {
         // Reimplement camera settings reset
+        // Reset settings on settings save.
         private static void resetCameraSettings(GameCamera __instance)
         {
             __instance.m_fov = defaultFOV;
@@ -34,6 +35,19 @@ namespace CustomizableCamera
                 __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeBowZoomFOVDuration.Value);
 
             lastSetFOV = __instance.m_fov;
+        }
+
+        public static bool checkBowZoomFOVLerpDuration(GameCamera __instance, float timeElapsed)
+        {
+            if (lastSetFOV == targetFOV || timeElapsed >= timeFOVDuration.Value)
+            {
+                __instance.m_fov = targetFOV;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public static bool checkFOVLerpDuration(GameCamera __instance, float timeElapsed)
@@ -72,11 +86,24 @@ namespace CustomizableCamera
             }
         }
 
-        private static void setValuesBasedOnCharacterState(Player __instance)
+        private static void setValuesBasedOnCharacterState(Player __instance, bool isFirstPerson)
         {
             __characterStatePrev = __characterState;
 
-            if (characterAiming && bowZoomEnabled.Value)
+            if (isFirstPerson)
+            {
+                if (characterAiming && bowZoomEnabled.Value)
+                {
+                    targetFOV = cameraBowZoomFirstPersonFOV.Value;
+                    __characterState = characterState.bowaiming;
+                } 
+                else
+                {
+                    targetFOV = cameraFirstPersonFOV.Value;
+                    __characterState = characterState.standing;
+                }
+            }
+            else if (characterAiming && bowZoomEnabled.Value)
             {
                 targetFOV = cameraBowZoomFOV.Value;
                 if (characterEquippedBow && cameraBowSettingsEnabled.Value)
@@ -111,6 +138,8 @@ namespace CustomizableCamera
                 __characterState = characterState.standing;
             }
 
+            //Debug.Log("targetX: " + targetPos.x + "    targetY: " + targetPos.y + "    targetZ: " + targetPos.z);
+
             if (__characterState != __characterStatePrev)
             {
                 characterStateChanged = true;
@@ -122,8 +151,7 @@ namespace CustomizableCamera
             }
         }
 
-        // Implement compatability for first person bow zoom.
-        private static bool checkIfFirstPerson(GameCamera __instance, float ___m_distance)
+        private static bool checkIfFirstPerson(float ___m_distance)
         {
             if (___m_distance <= 0.0)
                 return true;
@@ -131,7 +159,6 @@ namespace CustomizableCamera
             return false;
         }
 
-        // FOV flicker when bow is zoomed in for too long.
         private static void Postfix(GameCamera __instance, ref float ___m_distance)
         {
             Player localPlayer = Player.m_localPlayer;
@@ -139,14 +166,24 @@ namespace CustomizableCamera
             if (!__instance || !localPlayer)
                 return;
 
-            if (!isEnabled.Value)
-                resetCameraSettings(__instance);
-
-            isFirstPerson = checkIfFirstPerson(__instance, ___m_distance);
-
-            if (!isFirstPerson)
+            if (!isEnabled.Value) 
             {
-                setValuesBasedOnCharacterState(localPlayer);
+                resetCameraSettings(__instance);
+                return;
+            }
+
+            isFirstPerson = checkIfFirstPerson(___m_distance);
+            setValuesBasedOnCharacterState(localPlayer, isFirstPerson);
+
+            if (characterAiming)
+            {
+                targetFOVHasBeenReached = checkBowZoomFOVLerpDuration(__instance, localPlayer.GetAttackDrawPercentage());
+
+                if (!targetFOVHasBeenReached)
+                    moveToNewCameraFOVBowZoom(__instance, targetFOV, localPlayer.GetAttackDrawPercentage(), timeBowZoomInterpolationType.Value);
+            }
+            else
+            {
                 targetFOVHasBeenReached = checkFOVLerpDuration(__instance, timeFOV);
 
                 if (!targetFOVHasBeenReached)
@@ -156,23 +193,24 @@ namespace CustomizableCamera
                     else
                         timeFOV += Time.deltaTime;
 
-                    if (characterAiming)
-                        moveToNewCameraFOVBowZoom(__instance, targetFOV, localPlayer.GetAttackDrawPercentage(), timeBowZoomInterpolationType.Value);
-                    else
-                        moveToNewCameraFOV(__instance, targetFOV, timeFOV);
+                    moveToNewCameraFOV(__instance, targetFOV, timeFOV);
                 }
+            }
 
-                targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
+            // Skip the new target camera position below if the character is in first person.
+            if (isFirstPerson)
+                return;
 
-                if (!targetPosHasBeenReached)
-                {
-                    if (characterStateChanged)
-                        timeCameraPos = 0;
-                    else
-                        timeCameraPos += Time.deltaTime;
+            targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
 
-                    moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
-                }
+            if (!targetPosHasBeenReached)
+            {
+                if (characterStateChanged)
+                    timeCameraPos = 0;
+                else
+                    timeCameraPos += Time.deltaTime;
+
+                moveToNewCameraPosition(__instance, targetPos, timeCameraPos);
             }
         }
     }

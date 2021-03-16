@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Setup all settings on awake.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.0")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.1")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -20,7 +20,9 @@ namespace CustomizableCamera
         public static int defaultCameraMaxDistanceBoat = 16;
         public static float defaultSmoothness = 0.1f;
         public static float defaultFOV = 65.0f;
-        public static float defaultBowZoomFOV = 55.0f; 
+        public static float defaultFPFOV = 65.0f;
+        public static float defaultBowZoomFOV = 55.0f;
+        public static float defaultBowZoomFPFOV = 55.0f;
         public static float defaultTimeDuration = 5.0f;
         public static float defaultBowZoomTimeDuration = 3.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
@@ -30,6 +32,10 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraX;
         public static ConfigEntry<float> cameraY;
         public static ConfigEntry<float> cameraZ;
+
+        // First Person Camera Settings
+        public static ConfigEntry<float> cameraFirstPersonFOV;
+        public static ConfigEntry<float> cameraBowZoomFirstPersonFOV;
 
         // Sneak Camera Settings
         public static ConfigEntry<float> cameraSneakFOV;
@@ -120,12 +126,12 @@ namespace CustomizableCamera
             timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
             timeBowZoomFOVDuration       = Config.Bind<float>("- Misc Time Values -", "timeBowZoomFOVDuration", defaultBowZoomTimeDuration, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0.001f, 50f)));
             timeBowZoomInterpolationType = Config.Bind<interpolationTypes>("- Misc Time Values -", "timeBowZoomInterpolationType", interpolationTypes.Linear, new ConfigDescription("Interpolation method for the bow zoom."));
-            timeCameraPosDuration        = Config.Bind<float>("- Misc Time Values -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));      
+            timeCameraPosDuration        = Config.Bind<float>("- Misc Time Values -", "timeCameraPosDuration", defaultTimeDuration, new ConfigDescription("How quickly the camera moves to the new camera position", new AcceptableValueRange<float>(0.001f, 50f)));
 
-            cameraFOV       = Config.Bind<float>("Camera Settings", "cameraFOV", defaultFOV, "The camera fov.");
-            cameraX         = Config.Bind<float>("Camera Settings", "cameraX", defaultPosition.x, "The third person camera x position.");
-            cameraY         = Config.Bind<float>("Camera Settings", "cameraY", defaultPosition.y, "The third person camera y position.");
-            cameraZ         = Config.Bind<float>("Camera Settings", "cameraZ", defaultPosition.z, "The third person camera z position.");
+            cameraFOV = Config.Bind<float>("Camera Settings", "cameraFOV", defaultFOV, "The camera fov.");
+            cameraX   = Config.Bind<float>("Camera Settings", "cameraX", defaultPosition.x, "The third person camera x position.");
+            cameraY   = Config.Bind<float>("Camera Settings", "cameraY", defaultPosition.y, "The third person camera y position.");
+            cameraZ   = Config.Bind<float>("Camera Settings", "cameraZ", defaultPosition.z, "The third person camera z position.");
 
             cameraSneakFOV  = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakFOV", defaultFOV, "Camera fov when sneaking.");
             cameraSneakX    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakX", defaultPosition.x, "Camera X position when sneaking.");
@@ -138,9 +144,9 @@ namespace CustomizableCamera
             cameraBoatZ     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
 
             cameraBowSettingsEnabled = Config.Bind<bool>("Camera Settings - Bow", "bowSettingsEnable", false, "Enable or disable if there should be separate camera settings when holding a bow.");
-            cameraBowX = Config.Bind<float>("Camera Settings - Bow", "cameraBowX", defaultPosition.x, "Camera X position when holding a bow.");
-            cameraBowY = Config.Bind<float>("Camera Settings - Bow", "cameraBowY", defaultPosition.y, "Camera Y position when holding a bow.");
-            cameraBowZ = Config.Bind<float>("Camera Settings - Bow", "cameraBowZ", defaultPosition.z, "Camera Z position when holding a bow.");
+            cameraBowX               = Config.Bind<float>("Camera Settings - Bow", "cameraBowX", defaultPosition.x, "Camera X position when holding a bow.");
+            cameraBowY               = Config.Bind<float>("Camera Settings - Bow", "cameraBowY", defaultPosition.y, "Camera Y position when holding a bow.");
+            cameraBowZ               = Config.Bind<float>("Camera Settings - Bow", "cameraBowZ", defaultPosition.z, "Camera Z position when holding a bow.");
 
             bowZoomEnabled      = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomEnable", false, "Enable or disable bow zoom");
             bowZoomOnDraw       = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomOnDraw", true, "Zoom in automatically when drawing the bow.");
@@ -148,14 +154,19 @@ namespace CustomizableCamera
             bowCancelDrawKey    = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
             cameraBowZoomFOV    = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
 
+            cameraFirstPersonFOV        = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraFirstPersonFOV", defaultFPFOV, "The camera fov when you are in first person. This is only used to ensure compatibility for first person mods and first person bow zoom.");
+            cameraBowZoomFirstPersonFOV = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraBowZoomFirstPersonFOV", defaultBowZoomFPFOV, "FOV when zooming in with the bow when in first person.");
+
             DoPatching();
         }
 
-        private static void setMiscCameraSettings(GameCamera __instance)
+        // Set default mindistance on game as a new option.
+        private static void setMiscCameraSettings(GameCamera __instance, float ___m_distance)
         {
             __instance.m_smoothness = cameraSmoothness.Value;
             __instance.m_maxDistance = cameraMaxDistance.Value;
             __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
+            //___m_distance;
         }
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
@@ -163,13 +174,19 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(GameCamera), "Awake")]
         public static class GameCamera_Awake_Patch
         {
-            private static void Postfix(GameCamera __instance) => setMiscCameraSettings(__instance);
+            private static void Postfix(GameCamera __instance, float ___m_distance)
+            {
+                setMiscCameraSettings(__instance, ___m_distance);
+            }
         }
 
         [HarmonyPatch(typeof(GameCamera), "ApplySettings")]
         private static class GameCamera_ApplySettings_Patch
         {
-            private static void Postfix(GameCamera __instance) => setMiscCameraSettings(__instance);
+            private static void Postfix(GameCamera __instance, float ___m_distance)
+            {
+                setMiscCameraSettings(__instance, ___m_distance);
+            }
         }
     }
 }
