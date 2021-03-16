@@ -7,7 +7,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.3")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.4")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -16,6 +16,7 @@ namespace CustomizableCamera
         public static ConfigEntry<int> nexusID;
 
         // Default Values
+        public static float defaultValue = 0;
         public static int defaultCameraDistance = 4;
         public static int defaultCameraMaxDistance = 8;
         public static int defaultCameraMaxDistanceBoat = 16;
@@ -27,6 +28,19 @@ namespace CustomizableCamera
         public static float defaultTimeDuration = 5.0f;
         public static float defaultBowZoomTimeDuration = 3.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
+
+        // Crosshair
+        public static float playerInitialCrosshairX;
+        public static float playerInitialCrosshairY;
+
+        // Hud Positions
+        public static float playerInitialStealthbarX;
+        public static float playerInitialStealthbarY;
+
+        // Bow Crosshair Settings
+        public static ConfigEntry<bool> playerBowCrosshairEditsEnabled;
+        public static ConfigEntry<float> playerBowCrosshairX;
+        public static ConfigEntry<float> playerBowCrosshairY;
 
         // Normal Camera Settings
         public static ConfigEntry<float> cameraFOV;
@@ -162,6 +176,10 @@ namespace CustomizableCamera
             cameraFirstPersonFOV        = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraFirstPersonFOV", defaultFPFOV, "The camera fov when you are in first person. This is only used to ensure compatibility for first person mods and first person bow zoom.");
             cameraBowZoomFirstPersonFOV = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraBowZoomFirstPersonFOV", defaultBowZoomFPFOV, "FOV when zooming in with the bow when in first person.");
 
+            playerBowCrosshairEditsEnabled = Config.Bind<bool>("Crosshair Settings", "bowCrosshairEditsEnable", true, "Enable or disable crosshair edits when using a bow.");
+            playerBowCrosshairX = Config.Bind<float>("Crosshair Settings", "bowCrosshairX", defaultValue, "Bow crosshair x position.");
+            playerBowCrosshairY = Config.Bind<float>("Crosshair Settings", "bowCrosshairY", defaultValue, "Bow crosshair y position.");
+
             DoPatching();
         }
 
@@ -191,6 +209,22 @@ namespace CustomizableCamera
             private static void Postfix(GameCamera __instance)
             {
                 setMiscCameraSettings(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(Hud), "Awake")]
+        public class Hud_CrosshairAwake_Patch : CustomizableCamera
+        {
+            private static void Prefix(Hud __instance)
+            {
+                Transform transformBowCrosshair = __instance.m_crosshair.transform;
+                Transform transformStealthBar = __instance.m_stealthBar.transform;
+
+                playerInitialCrosshairX = transformBowCrosshair.position.x;
+                playerInitialCrosshairY = transformBowCrosshair.position.y;
+
+                playerInitialStealthbarX = transformStealthBar.position.x;
+                playerInitialStealthbarY = transformStealthBar.position.y;
             }
         }
     }
