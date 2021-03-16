@@ -7,7 +7,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.2")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.3")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -16,6 +16,7 @@ namespace CustomizableCamera
         public static ConfigEntry<int> nexusID;
 
         // Default Values
+        public static int defaultCameraDistance = 4;
         public static int defaultCameraMaxDistance = 8;
         public static int defaultCameraMaxDistanceBoat = 16;
         public static float defaultSmoothness = 0.1f;
@@ -65,6 +66,7 @@ namespace CustomizableCamera
 
         // Other Camera Settings
         public static ConfigEntry<float> cameraSmoothness;
+        public static ConfigEntry<float> cameraDistance;
         public static ConfigEntry<float> cameraMaxDistance;
         public static ConfigEntry<float> cameraMaxDistanceBoat;
 
@@ -121,6 +123,7 @@ namespace CustomizableCamera
 
             // These misc options will only take effect on game camera awake and when you save the game settings in the menu.
             cameraSmoothness        = Config.Bind<float>("- Misc -", "cameraSmoothness", defaultSmoothness, new ConfigDescription("Camera smoothing. Determines how smoothly/quickly the camera will follow your player.", new AcceptableValueRange<float>(0, 20f)));
+            cameraDistance          = Config.Bind<float>("- Misc -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Camera distance that should be set when starting the game.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 
@@ -163,12 +166,11 @@ namespace CustomizableCamera
         }
 
         // Set default m_distance on game as a new option.
-        private static void setMiscCameraSettings(GameCamera __instance, float ___m_distance)
-        {
-            __instance.m_smoothness = cameraSmoothness.Value;
+        private static void setMiscCameraSettings(GameCamera __instance)
+        {   
+            __instance.m_smoothness = cameraSmoothness.Value;  
             __instance.m_maxDistance = cameraMaxDistance.Value;
             __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
-            //___m_distance;
         }
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
@@ -176,18 +178,19 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(GameCamera), "Awake")]
         public static class GameCamera_Awake_Patch
         {
-            private static void Postfix(GameCamera __instance, float ___m_distance)
+            private static void Postfix(GameCamera __instance, ref float ___m_distance)
             {
-                setMiscCameraSettings(__instance, ___m_distance);
+                setMiscCameraSettings(__instance);
+                ___m_distance = cameraDistance.Value;
             }
         }
 
         [HarmonyPatch(typeof(GameCamera), "ApplySettings")]
         private static class GameCamera_ApplySettings_Patch
         {
-            private static void Postfix(GameCamera __instance, float ___m_distance)
+            private static void Postfix(GameCamera __instance)
             {
-                setMiscCameraSettings(__instance, ___m_distance);
+                setMiscCameraSettings(__instance);
             }
         }
     }
