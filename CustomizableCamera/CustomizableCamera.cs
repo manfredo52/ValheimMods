@@ -123,7 +123,7 @@ namespace CustomizableCamera
 
             // These misc options will only take effect on game camera awake and when you save the game settings in the menu.
             cameraSmoothness        = Config.Bind<float>("- Misc -", "cameraSmoothness", defaultSmoothness, new ConfigDescription("Camera smoothing. Determines how smoothly/quickly the camera will follow your player.", new AcceptableValueRange<float>(0, 20f)));
-            cameraDistance          = Config.Bind<float>("- Misc -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Camera distance that should be set when starting the game.", new AcceptableValueRange<float>(1, 100)));
+            cameraDistance          = Config.Bind<float>("- Misc -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Camera distance that should be set when starting the game.", new AcceptableValueRange<float>(0, 100)));
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 
