@@ -5,13 +5,13 @@ using HarmonyLib;
 
 // To-Do:
 //  Linear interpolation for switching camera zoom distance.
-//  Setup all settings on awake.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.1")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.2")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
+        // Main Settings
         public static ConfigEntry<bool> isEnabled;
         public static ConfigEntry<int> nexusID;
 
@@ -33,7 +33,8 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraY;
         public static ConfigEntry<float> cameraZ;
 
-        // First Person Camera Settings
+        // First Person Camera Mod Settings
+        public static ConfigEntry<bool> bowZoomFirstPersonEnabled;
         public static ConfigEntry<float> cameraFirstPersonFOV;
         public static ConfigEntry<float> cameraBowZoomFirstPersonFOV;
 
@@ -154,13 +155,14 @@ namespace CustomizableCamera
             bowCancelDrawKey    = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
             cameraBowZoomFOV    = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
 
+            bowZoomFirstPersonEnabled   = Config.Bind<bool>("Camera Settings - First Person Mod Compatibility", "bowZoomFirstPersonEnable", false, "Enable or disable bow zoom when in first person. Ensures compatibility with first person mods.");
             cameraFirstPersonFOV        = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraFirstPersonFOV", defaultFPFOV, "The camera fov when you are in first person. This is only used to ensure compatibility for first person mods and first person bow zoom.");
             cameraBowZoomFirstPersonFOV = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraBowZoomFirstPersonFOV", defaultBowZoomFPFOV, "FOV when zooming in with the bow when in first person.");
 
             DoPatching();
         }
 
-        // Set default mindistance on game as a new option.
+        // Set default m_distance on game as a new option.
         private static void setMiscCameraSettings(GameCamera __instance, float ___m_distance)
         {
             __instance.m_smoothness = cameraSmoothness.Value;

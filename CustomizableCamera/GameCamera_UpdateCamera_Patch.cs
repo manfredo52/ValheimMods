@@ -92,7 +92,7 @@ namespace CustomizableCamera
 
             if (isFirstPerson)
             {
-                if (characterAiming && bowZoomEnabled.Value)
+                if (characterAiming && bowZoomFirstPersonEnabled.Value)
                 {
                     targetFOV = cameraBowZoomFirstPersonFOV.Value;
                     __characterState = characterState.bowaiming;
