@@ -46,8 +46,7 @@ namespace CustomizableCamera
                             blockHold = true;
                         }
                         else if (bowZoomKeyToggle.Value)
-                        {
-                            
+                        {                       
                             if (Input.GetKeyDown(bowZoomKey.Value.MainKey))
                                 characterAiming = !characterAiming;
                         }
@@ -63,7 +62,16 @@ namespace CustomizableCamera
                 else
                 {
                     characterAiming = false;
-                }   
+                }
+
+                // Change sensitivity when zooming in with the bow if enabled.
+                if (bowZoomSensitivityEnabled.Value)
+                {
+                    if (characterAiming)
+                        PlayerController.m_mouseSens = (playerMouseSensitivity * bowZoomSensitivity.Value);
+                    else
+                        PlayerController.m_mouseSens = playerMouseSensitivity;
+                }
             }
         }
 

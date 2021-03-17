@@ -1,13 +1,14 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
+using UnityEngine.UI;
 using HarmonyLib;
 
 // To-Do:
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.5")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.6")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -28,6 +29,11 @@ namespace CustomizableCamera
         public static float defaultTimeDuration = 5.0f;
         public static float defaultBowZoomTimeDuration = 3.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
+
+        // Mouse Sensitivity
+        public static float playerMouseSensitivity;
+        public static ConfigEntry<bool> bowZoomSensitivityEnabled;
+        public static ConfigEntry<float> bowZoomSensitivity;
 
         // Crosshair
         public static float playerInitialCrosshairX;
@@ -171,9 +177,11 @@ namespace CustomizableCamera
             bowZoomOnDraw       = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomOnDraw", true, "Zoom in automatically when drawing the bow.");
             bowZoomKeyToggle    = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomKeyToggle", true, "Zoom key toggles zoom if enabled, otherwise hold the zoom key.");
             bowZoomKey          = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowZoomKey", new KeyboardShortcut(KeyCode.Mouse1), "Keyboard shortcut or mouse button for zooming in with the bow.");
+            bowZoomSensitivityEnabled = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomSensitivityEnable", false, "Enable or disable bow zoom sensitivity.");
+            bowZoomSensitivity  = Config.Bind<float>("Camera Settings - Bow Zoom", "bowZoomSensitivity", 0.5f, new ConfigDescription("Mouse sensitivity multiplier when zooming in with the bow.", new AcceptableValueRange<float>(0f, 1f)));
             bowCancelDrawKey    = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
             cameraBowZoomFOV    = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
-
+            
             bowZoomFirstPersonEnabled   = Config.Bind<bool>("Camera Settings - First Person Mod Compatibility", "bowZoomFirstPersonEnable", false, "Enable or disable bow zoom when in first person. Ensures compatibility with first person mods.");
             cameraFirstPersonFOV        = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraFirstPersonFOV", defaultFPFOV, "The camera fov when you are in first person. This is only used to ensure compatibility for first person mods and first person bow zoom.");
             cameraBowZoomFirstPersonFOV = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraBowZoomFirstPersonFOV", defaultBowZoomFPFOV, "FOV when zooming in with the bow when in first person.");
@@ -185,7 +193,6 @@ namespace CustomizableCamera
             DoPatching();
         }
 
-        // Set default m_distance on game as a new option.
         private static void setMiscCameraSettings(GameCamera __instance)
         {   
             __instance.m_smoothness = cameraSmoothness.Value;  
@@ -206,7 +213,7 @@ namespace CustomizableCamera
         }
 
         [HarmonyPatch(typeof(GameCamera), "ApplySettings")]
-        private static class GameCamera_ApplySettings_Patch
+        public static class GameCamera_ApplySettings_Patch
         {
             private static void Postfix(GameCamera __instance)
             {
@@ -215,7 +222,7 @@ namespace CustomizableCamera
         }
 
         [HarmonyPatch(typeof(Hud), "Awake")]
-        public class Hud_CrosshairAwake_Patch : CustomizableCamera
+        public static class Hud_CrosshairAwake_Patch
         {
             private static void Prefix(Hud __instance)
             {
@@ -227,6 +234,15 @@ namespace CustomizableCamera
 
                 playerInitialStealthbarX = transformStealthBar.position.x;
                 playerInitialStealthbarY = transformStealthBar.position.y;
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayerController), "Awake")]
+        public static class PlayerController_SetSensAwake_Patch
+        {
+            private static void Prefix()
+            {           
+                playerMouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", PlayerController.m_mouseSens);
             }
         }
     }

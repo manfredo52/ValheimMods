@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using HarmonyLib;
 
 namespace CustomizableCamera
@@ -11,8 +12,8 @@ namespace CustomizableCamera
         {
             if (playerBowCrosshairEditsEnabled.Value)
             { 
-                UnityEngine.UI.Image playerCrosshair = __instance.m_crosshair;
-                UnityEngine.UI.Image playerBowCrosshair = __instance.m_crosshairBow;
+                Image playerCrosshair = __instance.m_crosshair;
+                Image playerBowCrosshair = __instance.m_crosshairBow;
                 GuiBar playerStealthBar = __instance.m_stealthBar;
                 GameObject playerHidden = __instance.m_hidden;
 
