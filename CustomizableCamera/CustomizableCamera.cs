@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.6")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.7")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -90,6 +90,7 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraDistance;
         public static ConfigEntry<float> cameraMaxDistance;
         public static ConfigEntry<float> cameraMaxDistanceBoat;
+        public static ConfigEntry<KeyboardShortcut> swapShoulderViewKey;
 
         // Linear Interpolation Settings
         public static ConfigEntry<float> timeFOVDuration;
@@ -117,6 +118,7 @@ namespace CustomizableCamera
         public static bool characterEquippedBow;
 
         public static bool isFirstPerson;
+        public static bool onSwappedShoulder;
 
         public enum interpolationTypes
         {
@@ -147,6 +149,7 @@ namespace CustomizableCamera
             cameraDistance          = Config.Bind<float>("- Misc -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Camera distance that should be set when starting the game.", new AcceptableValueRange<float>(0, 100)));
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
+            swapShoulderViewKey = Config.Bind<KeyboardShortcut>("- Misc -", "swapShoulderViewKey", new KeyboardShortcut(KeyCode.B), "Keyboard shortcut or mouse button to swap shoulder views.");
 
             timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
             timeBowZoomFOVDuration       = Config.Bind<float>("- Misc Time Values -", "timeBowZoomFOVDuration", defaultBowZoomTimeDuration, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0.001f, 50f)));

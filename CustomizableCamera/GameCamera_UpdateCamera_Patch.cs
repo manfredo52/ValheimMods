@@ -140,6 +140,17 @@ namespace CustomizableCamera
 
             //Debug.Log("targetX: " + targetPos.x + "    targetY: " + targetPos.y + "    targetZ: " + targetPos.z);
 
+            // When the player swaps shoulder views.
+            float swappedShoulderX = targetPos.x * (float) -1.0;
+            if (Input.GetKeyDown(swapShoulderViewKey.Value.MainKey) && !isFirstPerson)
+            {
+                timeCameraPos = 0;
+                onSwappedShoulder = !onSwappedShoulder;
+            }
+
+            if (onSwappedShoulder)
+                targetPos.x = swappedShoulderX;
+
             if (__characterState != __characterStatePrev)
             {
                 characterStateChanged = true;
