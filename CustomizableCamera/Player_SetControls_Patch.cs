@@ -75,9 +75,14 @@ namespace CustomizableCamera
             }
         }
 
-        private static void Postfix(Player __instance, bool blockHold, bool crouch, bool run, bool autoRun)
+        private static void Postfix(Player __instance, Vector3 movedir, bool blockHold, bool crouch, bool run, bool autoRun)
         {
             if (!__instance) return;
+
+            if (movedir.magnitude != 0)
+                playerIsMoving = true;
+            else
+                playerIsMoving = false;
 
             if (characterCrouched && crouch)
             {
@@ -89,6 +94,11 @@ namespace CustomizableCamera
                 isPlayerAbleToCrouch = false;
             else
                 isPlayerAbleToCrouch = true;
+
+            if (playerIsMoving && run && !blockHold)
+                characterSprinting = true;
+            else
+                characterSprinting = false;
 
             if (isPlayerAbleToCrouch && crouch)
                 characterCrouched = true;

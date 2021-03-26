@@ -131,6 +131,12 @@ namespace CustomizableCamera
                 targetPos = new Vector3(cameraSneakX.Value, cameraSneakY.Value, cameraSneakZ.Value);
                 __characterState = characterState.crouching;
             }
+            else if (characterSprinting)
+            {
+                targetFOV = cameraSprintFOV.Value;
+                targetPos = new Vector3(cameraSprintX.Value, cameraSprintY.Value, cameraSprintZ.Value);
+                __characterState = characterState.sprinting;
+            }
             else
             {
                 targetFOV = cameraFOV.Value;

@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.7")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.8")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -65,6 +65,12 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraSneakY;
         public static ConfigEntry<float> cameraSneakZ;
 
+        // Sprinting Camera Settings
+        public static ConfigEntry<float> cameraSprintFOV;
+        public static ConfigEntry<float> cameraSprintX;
+        public static ConfigEntry<float> cameraSprintY;
+        public static ConfigEntry<float> cameraSprintZ;
+
         // Boat Camera Settings
         public static ConfigEntry<float> cameraBoatFOV;
         public static ConfigEntry<float> cameraBoatX;
@@ -115,8 +121,10 @@ namespace CustomizableCamera
         public static bool characterControlledShip;
         public static bool characterCrouched;
         public static bool characterAiming;
+        public static bool characterSprinting;
         public static bool characterEquippedBow;
 
+        public static bool playerIsMoving;
         public static bool isFirstPerson;
         public static bool onSwappedShoulder;
 
@@ -165,6 +173,11 @@ namespace CustomizableCamera
             cameraSneakX    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakX", defaultPosition.x, "Camera X position when sneaking.");
             cameraSneakY    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakY", defaultPosition.y, "Camera Y position when sneaking.");
             cameraSneakZ    = Config.Bind<float>("Camera Settings - Sneak", "cameraSneakZ", defaultPosition.z, "Camera Z position when sneaking.");
+
+            cameraSprintFOV = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintFOV", defaultFOV, "Camera fov when sprinting.");
+            cameraSprintX = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintX", defaultPosition.x, "Camera X position when sprinting.");
+            cameraSprintY = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintY", defaultPosition.y, "Camera Y position when sprinting.");
+            cameraSprintZ = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintZ", defaultPosition.z, "Camera Z position when sprinting.");
 
             cameraBoatFOV   = Config.Bind<float>("Camera Settings - Boat", "cameraBoatFOV", defaultFOV, "Camera fov when sailing.");
             cameraBoatX     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatX", defaultPosition.x, "Camera X position when sailing.");
