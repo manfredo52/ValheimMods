@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
-    public class GameCamera_UpdateCamera_Patch : CustomizableCamera
+    public class GameCamera_Camera_Patch : CustomizableCamera
     {
         // Reimplement camera settings reset
         // Reset settings on settings save.
@@ -144,8 +144,6 @@ namespace CustomizableCamera
                 __characterState = characterState.standing;
             }
 
-            //Debug.Log("targetX: " + targetPos.x + "    targetY: " + targetPos.y + "    targetZ: " + targetPos.z);
-
             // When the player swaps shoulder views.
             float swappedShoulderX = targetPos.x * (float) -1.0;
             if (Input.GetKeyDown(swapShoulderViewKey.Value.MainKey) && !isFirstPerson)
@@ -176,7 +174,7 @@ namespace CustomizableCamera
             return false;
         }
 
-        private static void Postfix(GameCamera __instance, ref float ___m_distance)
+        private static void Postfix(GameCamera __instance, ref Vector3 pos, ref float ___m_distance)
         {
             Player localPlayer = Player.m_localPlayer;
 
@@ -217,6 +215,9 @@ namespace CustomizableCamera
             // Skip the new target camera position below if the character is in first person.
             if (isFirstPerson)
                 return;
+
+            if (cameraLockedBoatYEnabled.Value && characterControlledShip)
+                pos.y = cameraLockedBoatY.Value;
 
             targetPosHasBeenReached = checkCameraLerpDuration(__instance, timeCameraPos);
 

@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.8")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.9")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -76,6 +76,8 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraBoatX;
         public static ConfigEntry<float> cameraBoatY;
         public static ConfigEntry<float> cameraBoatZ;
+        public static ConfigEntry<bool> cameraLockedBoatYEnabled;
+        public static ConfigEntry<float> cameraLockedBoatY;
 
         // Bow Camera Setting
         public static ConfigEntry<bool> cameraBowSettingsEnabled;
@@ -183,6 +185,8 @@ namespace CustomizableCamera
             cameraBoatX     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatX", defaultPosition.x, "Camera X position when sailing.");
             cameraBoatY     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
             cameraBoatZ     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
+            cameraLockedBoatYEnabled = Config.Bind<bool>("Camera Settings - Boat", "cameraLockedBoatYEnabled", false, "Enable or disable the y axis being locked to a specific value when sailing. Reduces motion sickness.");
+            cameraLockedBoatY = Config.Bind<float>("Camera Settings - Boat", "cameraLockedBoatY", 33, "The y axis value that the camera should be locked to when enabled. Clipping with the ocean/waves can occur if set too low.");
 
             cameraBowSettingsEnabled = Config.Bind<bool>("Camera Settings - Bow", "bowSettingsEnable", false, "Enable or disable if there should be separate camera settings when holding a bow.");
             cameraBowX               = Config.Bind<float>("Camera Settings - Bow", "cameraBowX", defaultPosition.x, "Camera X position when holding a bow.");

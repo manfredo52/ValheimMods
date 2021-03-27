@@ -74,7 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Player_SetControls_Patch.cs" />
-    <Compile Include="GameCamera_UpdateCamera_Patch.cs" />
+    <Compile Include="GameCamera_Camera_Patch.cs" />
     <Compile Include="Hud_Crosshair_Patch.cs" />
     <Compile Include="Player_ShipControl_Patch.cs" />
     <Compile Include="CustomizableCamera.cs" />
