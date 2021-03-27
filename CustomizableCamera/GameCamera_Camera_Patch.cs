@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
-    public class GameCamera_Camera_Patch : CustomizableCamera
+    public class GameCamera_CameraPosition_Patch : CustomizableCamera
     {
         // Reimplement camera settings reset
         // Reset settings on settings save.
@@ -232,4 +232,15 @@ namespace CustomizableCamera
             }
         }
     }
+
+    /*
+    [HarmonyPatch(typeof(GameCamera), "UpdateCamera")]
+    public class GameCamera_CameraUpdate_Patch : CustomizableCamera
+    {
+        private static void Postfix(GameCamera __instance)
+        {
+            
+        }
+    }
+    */
 }

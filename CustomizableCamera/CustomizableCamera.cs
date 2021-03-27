@@ -8,7 +8,7 @@ using HarmonyLib;
 //  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.1.9")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.0")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -21,6 +21,7 @@ namespace CustomizableCamera
         public static int defaultCameraDistance = 4;
         public static int defaultCameraMaxDistance = 8;
         public static int defaultCameraMaxDistanceBoat = 16;
+        public static int defaultZoomSensitivity = 10;
         public static float defaultSmoothness = 0.1f;
         public static float defaultFOV = 65.0f;
         public static float defaultFPFOV = 65.0f;
@@ -93,11 +94,12 @@ namespace CustomizableCamera
         public static ConfigEntry<KeyboardShortcut> bowCancelDrawKey;
         public static ConfigEntry<float> cameraBowZoomFOV;
 
-        // Other Camera Settings
+        // Misc Camera Settings
         public static ConfigEntry<float> cameraSmoothness;
         public static ConfigEntry<float> cameraDistance;
         public static ConfigEntry<float> cameraMaxDistance;
         public static ConfigEntry<float> cameraMaxDistanceBoat;
+        public static ConfigEntry<float> cameraZoomSensitivity;
         public static ConfigEntry<KeyboardShortcut> swapShoulderViewKey;
 
         // Linear Interpolation Settings
@@ -159,7 +161,8 @@ namespace CustomizableCamera
             cameraDistance          = Config.Bind<float>("- Misc -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Camera distance that should be set when starting the game.", new AcceptableValueRange<float>(0, 100)));
             cameraMaxDistance       = Config.Bind<float>("- Misc -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
-            swapShoulderViewKey = Config.Bind<KeyboardShortcut>("- Misc -", "swapShoulderViewKey", new KeyboardShortcut(KeyCode.B), "Keyboard shortcut or mouse button to swap shoulder views.");
+            cameraZoomSensitivity   = Config.Bind<float>("- Misc -", "cameraZoomSensitivity", defaultZoomSensitivity, new ConfigDescription("How much the camera zooms in or out when changing camera distance with the scroll wheel. Takes effect on game restart.", new AcceptableValueRange<float>(1, 25)));
+            swapShoulderViewKey     = Config.Bind<KeyboardShortcut>("- Misc -", "swapShoulderViewKey", new KeyboardShortcut(KeyCode.B), "Keyboard shortcut or mouse button to swap shoulder views.");
 
             timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
             timeBowZoomFOVDuration       = Config.Bind<float>("- Misc Time Values -", "timeBowZoomFOVDuration", defaultBowZoomTimeDuration, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0.001f, 50f)));
@@ -218,6 +221,7 @@ namespace CustomizableCamera
             __instance.m_smoothness = cameraSmoothness.Value;  
             __instance.m_maxDistance = cameraMaxDistance.Value;
             __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
+            
         }
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
@@ -225,10 +229,11 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(GameCamera), "Awake")]
         public static class GameCamera_Awake_Patch
         {
-            private static void Postfix(GameCamera __instance, ref float ___m_distance)
+            private static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
             {
                 setMiscCameraSettings(__instance);
                 ___m_distance = cameraDistance.Value;
+                ___m_zoomSens = cameraZoomSensitivity.Value;
             }
         }
 
