@@ -73,6 +73,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hud_Update_Patch.cs" />
     <Compile Include="ImmersiveHud.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
