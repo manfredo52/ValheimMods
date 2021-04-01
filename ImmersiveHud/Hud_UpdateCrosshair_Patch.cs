@@ -16,8 +16,11 @@ namespace ImmersiveHud
 
             if (bowDrawPercentage > 0.0)
             {
-                float num = Mathf.Lerp(0.5f, 0.15f, bowDrawPercentage);
-                playerBowCrosshair.transform.localScale = new Vector3(num, num, num);
+                if (useCustomBowCrosshair.Value)
+                {
+                    float num = Mathf.Lerp(0.75f, 0.25f, bowDrawPercentage);
+                    playerBowCrosshair.transform.localScale = new Vector3(num, num, num);
+                }
 
                 if (displayBowDrawCrosshair.Value)
                     playerBowCrosshair.color = Color.Lerp(new Color(1f, 1f, 1f, 0.0f), crosshairBowDrawColor.Value, bowDrawPercentage);         
