@@ -232,15 +232,4 @@ namespace CustomizableCamera
             }
         }
     }
-
-    /*
-    [HarmonyPatch(typeof(GameCamera), "UpdateCamera")]
-    public class GameCamera_CameraUpdate_Patch : CustomizableCamera
-    {
-        private static void Postfix(GameCamera __instance)
-        {
-            
-        }
-    }
-    */
 }
