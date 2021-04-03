@@ -6,7 +6,6 @@ namespace ImmersiveHud
     [HarmonyPatch(typeof(Player), "Update")]
     public class Player_Update_Patch : ImmersiveHud
     {
-
         private static void Prefix(Player __instance)
         {
             if (!__instance) return;

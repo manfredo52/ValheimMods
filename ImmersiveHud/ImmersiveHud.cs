@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
@@ -8,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.3")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.4")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -41,19 +42,27 @@ namespace ImmersiveHud
         public static Sprite crosshairSpriteOriginal;
         public static Sprite crosshairBowSpriteOriginal;
 
+        // Hud Element Settings
+        public static ConfigEntry<bool> displayHealthAlways;
+        public static ConfigEntry<bool> displayHotbarAlways;
+        public static ConfigEntry<bool> displayForsakenPowerAlways;
+        public static ConfigEntry<bool> displayStatusEffectsAlways;
+        public static ConfigEntry<bool> displayMiniMapAlways;
+        public static ConfigEntry<bool> displayQuickSlotsAlways;
+
+        // Hud Element - All
         public static bool hudHidden;
+
+        // Hud Element - Health
+
+        // Hud Element - Forsaken
+
+        // Hud Element - HotKeyBar
+
+        // Hud Element - MiniMap
         public static bool isMiniMapActive;
 
-        public static float timeFade = 0;
-        public static float targetAlpha;
-        public static float lastSetAlpha;
-
-        public static float timeMapFade = 0;
-        public static float targetMapAlpha;
-        public static float lastSetMapAlpha;  
-
-        public static bool targetAlphaHasBeenReached;
-        public static bool targetMapAlphaHasBeenReached;
+        // Hud Element - QuickSlots
 
         // Character States
         public static bool characterEquippedItem;
@@ -68,13 +77,12 @@ namespace ImmersiveHud
         public static float fadeDuration = 0.5f;
 
         // List of hud elements
-        // Removing "MiniMap" from this will result in a null reference error
-        public static string[] hudElements =
+        public static string[] hudElementNames =
         {
-            "HotKeyBar",
             "healthpanel",
-            "StatusEffects",
             "GuardianPower",
+            "HotKeyBar",
+            "StatusEffects",
             "MiniMap"
         };
 
@@ -82,6 +90,23 @@ namespace ImmersiveHud
         {
             "QuickSlotsHotkeyBar"
         };
+
+        public class HudElement
+        {
+            public Transform element;
+            public string elementName;
+            public bool targetAlphaReached;
+            public float targetAlpha;
+            public float lastSetAlpha;
+            public float timeFade = 0;
+
+            public HudElement(string name)
+            {
+                elementName = name;
+            }
+        }
+
+        public static Dictionary<string, HudElement> hudElements = new Dictionary<string, HudElement>();
 
         public static Sprite LoadCrosshairTexture(string filename)
         {
@@ -122,7 +147,13 @@ namespace ImmersiveHud
             displayCrosshairOnEquipped      = Config.Bind<bool>("Crosshair Settings", "displayCrosshairOnEquipped", false, "Display crosshair when an item is equipped in either hand.");
             displayCrosshairOnBowEquipped   = Config.Bind<bool>("Crosshair Settings", "displayCrosshairOnBowEquipped", false, "Display crosshair when the bow is equipped.");
 
-            // Hud Elements Settings
+            // Display Elements Settings
+            displayHealthAlways             = Config.Bind<bool>("Display Settings", "displayHealthAlways", false, "Always display the health panel.");
+            displayHotbarAlways             = Config.Bind<bool>("Display Settings", "displayHotbarAlways", false, "Always display the hotbar.");
+            displayForsakenPowerAlways      = Config.Bind<bool>("Display Settings", "displayForsakenPowerAlways", false, "Always display the forsaken power.");
+            displayStatusEffectsAlways      = Config.Bind<bool>("Display Settings", "displayStatusEffectsAlways", false, "Always display status effects.");
+            displayMiniMapAlways            = Config.Bind<bool>("Display Settings", "displayMiniMapAlways", false, "Always display the minimap.");
+            displayQuickSlotsAlways         = Config.Bind<bool>("Display Settings", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
 
             // Display Scenario Settings
 
@@ -147,8 +178,12 @@ namespace ImmersiveHud
                 Transform hudRoot = __instance.transform.Find("hudroot");
 
                 // Add CanvasGroup to each hud element on awake.
-                foreach (string hudElement in hudElements)
-                    hudRoot.Find(hudElement).GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                foreach (string name in hudElementNames)
+                {
+                    hudElements.Add(name, new HudElement(name));
+                    hudElements[name].element = hudRoot.Find(name);
+                    hudElements[name].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                }  
 
                 hudHidden = hudHiddenOnStart.Value;
 

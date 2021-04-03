@@ -28,27 +28,21 @@ namespace ImmersiveHud
             }
         }
 
-        public static void updateHudElementTransparency(string hudElement, float targetAlpha, float time)
+        public static void updateHudElementTransparency(HudElement hudElement)
         {
-            if (hudElement == "QuickSlotsHotkeyBar" && !hasQuickSlotsEnabled)
+            if (hudElement.elementName == "QuickSlotsHotkeyBar" && !hasQuickSlotsEnabled)
                 return;
 
-            Transform hudRoot = Hud.instance.transform.Find("hudroot");
             float lerpedAlpha;
+            lerpedAlpha = Mathf.Lerp(hudElement.lastSetAlpha, hudElement.targetAlpha, hudElement.timeFade / hudFadeDuration.Value);
 
-            if (hudElement == "MiniMap")
+            if (hudElement.elementName == "MiniMap")
             {
-                lerpedAlpha = Mathf.Lerp(lastSetMapAlpha, targetAlpha, time / hudFadeDuration.Value);
-                hudRoot.Find(hudElement).GetComponent<Minimap>().m_mapImageSmall.CrossFadeAlpha(targetAlpha, time, false);
-                lastSetMapAlpha = hudRoot.Find(hudElement).GetComponent<CanvasGroup>().alpha;
-            }
-            else
-            {
-                lerpedAlpha = Mathf.Lerp(lastSetAlpha, targetAlpha, time / hudFadeDuration.Value);
-                lastSetAlpha = hudRoot.Find(hudElement).GetComponent<CanvasGroup>().alpha;
+                hudElement.element.GetComponent<Minimap>().m_mapImageSmall.CrossFadeAlpha(hudElement.targetAlpha, hudElement.timeFade, false);
             }
 
-            hudRoot.Find(hudElement).GetComponent<CanvasGroup>().alpha = lerpedAlpha;
+            hudElement.lastSetAlpha = lerpedAlpha;
+            hudElement.element.GetComponent<CanvasGroup>().alpha = lerpedAlpha;
         }
 
         public static bool checkHudLerpDuration(float timeElapsed)
@@ -68,7 +62,7 @@ namespace ImmersiveHud
 
             // Reset timer when changing map modes.
             if (prevState != isMiniMapActive)
-                timeMapFade = 0;
+                hudElements["MiniMap"].timeFade = 0;
         }
 
         public static void setValuesBasedOnHud(bool pressedKey)
@@ -76,23 +70,72 @@ namespace ImmersiveHud
             if (pressedKey)
             {
                 hudHidden = !hudHidden;
-                timeFade = 0;
-                timeMapFade = 0;
+
+                foreach (string name in hudElementNames)
+                    hudElements[name].timeFade = 0;
             }
 
             if (hudHidden)
             {
-                targetAlpha = 0;
+                foreach (string name in hudElementNames)
+                    hudElements[name].targetAlpha = 0;
 
                 if (isMiniMapActive)
-                    targetMapAlpha = 0;
+                    hudElements["MiniMap"].targetAlpha = 0;
                 else
-                    targetMapAlpha = 1;
+                    hudElements["MiniMap"].targetAlpha = 1;
             }
             else
             {
-                targetAlpha = 1;
-                targetMapAlpha = 1;
+                // Health Display
+                if (displayHealthAlways.Value)
+                {
+                    hudElements["healthpanel"].targetAlpha = 1;
+                }
+                else
+                {
+                    hudElements["healthpanel"].targetAlpha = 0;
+                }
+
+                // Forsaken Power Display
+                if (displayForsakenPowerAlways.Value)
+                {
+                    hudElements["GuardianPower"].targetAlpha = 1;
+                }
+                else
+                {
+                    hudElements["GuardianPower"].targetAlpha = 0;
+                }
+
+                // Hot Key Bar Display
+                if (displayHotbarAlways.Value)
+                {
+                    hudElements["HotKeyBar"].targetAlpha = 1;
+                }
+                else
+                {
+                    hudElements["HotKeyBar"].targetAlpha = 0;
+                }
+
+                // Status Effects Display
+                if (displayStatusEffectsAlways.Value)
+                {
+                    hudElements["StatusEffects"].targetAlpha = 1;
+                }
+                else
+                {
+                    hudElements["StatusEffects"].targetAlpha = 0;
+                }
+
+                // MiniMap Display
+                if (displayMiniMapAlways.Value)
+                {
+                    hudElements["MiniMap"].targetAlpha = 1;
+                }
+                else
+                {
+                    hudElements["MiniMap"].targetAlpha = 0;
+                }
             }
         }
 
@@ -106,29 +149,17 @@ namespace ImmersiveHud
             Transform hudRoot = __instance.transform.Find("hudroot");
 
             getPlayerData(hudRoot);
-            setCompatibility(hudRoot);
+            //setCompatibility(hudRoot);
             setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey));
 
-            // Hud elements
-            targetAlphaHasBeenReached = checkHudLerpDuration(timeFade);
+            foreach (string name in hudElementNames) {
+                hudElements[name].targetAlphaReached = checkHudLerpDuration(hudElements[name].timeFade);
 
-            if (!targetAlphaHasBeenReached)
-            {
-                timeFade += Time.deltaTime;
-
-                foreach (string hudElement in hudElements)
-                    updateHudElementTransparency(hudElement, targetAlpha, timeFade);
-
-                updateHudElementTransparency("QuickSlotsHotkeyBar", targetAlpha, timeFade);
-            }
-
-            // Minimap
-            targetMapAlphaHasBeenReached = checkHudLerpDuration(timeMapFade);
-
-            if (!targetMapAlphaHasBeenReached)
-            {
-                timeMapFade += Time.deltaTime;
-                updateHudElementTransparency("MiniMap", targetMapAlpha, timeMapFade);
+                if (!hudElements[name].targetAlphaReached)
+                {
+                    hudElements[name].timeFade += Time.deltaTime;
+                    updateHudElementTransparency(hudElements[name]);
+                }
             }
         }
     }
