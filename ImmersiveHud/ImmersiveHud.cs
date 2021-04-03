@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.5")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.6")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -19,8 +19,9 @@ namespace ImmersiveHud
 
         // Main Settings
         public static ConfigEntry<KeyboardShortcut> hideHudKey;
+        public static ConfigEntry<bool> hudHiddenNotification;
         public static ConfigEntry<bool> hudHiddenOnStart;
-        public static ConfigEntry<float> hudFadeDuration;
+        public static ConfigEntry<float> hudFadeDuration;   
 
         // Crosshair Settings
         public static ConfigEntry<bool> useCustomCrosshair;
@@ -130,9 +131,10 @@ namespace ImmersiveHud
             nexusID     = Config.Bind<int>("- General -", "NexusID", 790, "Nexus mod ID for updates");
 
             // Main Settings
-            hideHudKey          = Config.Bind<KeyboardShortcut>("- Main Settings -", "hideHudKey", new KeyboardShortcut(KeyCode.H), "Keyboard shortcut or mouse button to hide the hud.");
-            hudHiddenOnStart    = Config.Bind<bool>("- Main Settings -", "hudHiddenOnStart", false, "Hide the hud when the game is started.");
-            hudFadeDuration     = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1f, "How quickly the hud fades in or out.");
+            hideHudKey              = Config.Bind<KeyboardShortcut>("- Main Settings -", "hideHudKey", new KeyboardShortcut(KeyCode.H), "Keyboard shortcut or mouse button to hide the hud.");
+            hudHiddenOnStart        = Config.Bind<bool>("- Main Settings -", "hudHiddenOnStart", false, "Hide the hud when the game is started.");
+            hudHiddenNotification   = Config.Bind<bool>("- Main Settings -", "hudHiddenNotification", false, "Enable notifications in the top left corner for hiding the hud.");
+            hudFadeDuration         = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1f, "How quickly the hud fades in or out.");
 
             // Compatibility
             quickSlotsEnabled   = Config.Bind<bool>("Compatibility", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");

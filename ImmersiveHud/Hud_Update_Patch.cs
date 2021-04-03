@@ -67,6 +67,14 @@ namespace ImmersiveHud
             {
                 hudHidden = !hudHidden;
 
+                if (hudHiddenNotification.Value)
+                {
+                    if (hudHidden)
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "Hud is hidden.");
+                    else
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "Hud is visible.");
+                }
+
                 foreach (string name in hudElementNames)
                     hudElements[name].timeFade = 0;
             }
