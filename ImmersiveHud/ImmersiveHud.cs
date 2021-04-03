@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.4")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.5")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -50,6 +50,11 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayMiniMapAlways;
         public static ConfigEntry<bool> displayQuickSlotsAlways;
 
+        // Compatibility Settings
+        public static ConfigEntry<bool> quickSlotsEnabled;
+
+        public static bool hasQuickSlotsEnabled;
+
         // Hud Element - All
         public static bool hudHidden;
 
@@ -69,10 +74,6 @@ namespace ImmersiveHud
         public static bool characterEquippedBow;
         public static bool isLookingAtActivatable;
 
-        // Compatibility
-        public static bool hasQuickSlotsEnabled;
-        public static bool hasCanvasQuickSlots;
-
         // Other
         public static float fadeDuration = 0.5f;
 
@@ -83,11 +84,7 @@ namespace ImmersiveHud
             "GuardianPower",
             "HotKeyBar",
             "StatusEffects",
-            "MiniMap"
-        };
-
-        public static string[] hudElementsOther =
-        {
+            "MiniMap",
             "QuickSlotsHotkeyBar"
         };
 
@@ -102,6 +99,7 @@ namespace ImmersiveHud
 
             public HudElement(string name)
             {
+                element = null;
                 elementName = name;
             }
         }
@@ -134,7 +132,10 @@ namespace ImmersiveHud
             // Main Settings
             hideHudKey          = Config.Bind<KeyboardShortcut>("- Main Settings -", "hideHudKey", new KeyboardShortcut(KeyCode.H), "Keyboard shortcut or mouse button to hide the hud.");
             hudHiddenOnStart    = Config.Bind<bool>("- Main Settings -", "hudHiddenOnStart", false, "Hide the hud when the game is started.");
-            hudFadeDuration     = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1, "How quickly the hud fades in or out.");
+            hudFadeDuration     = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1f, "How quickly the hud fades in or out.");
+
+            // Compatibility
+            quickSlotsEnabled   = Config.Bind<bool>("Compatibility", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
 
             // Crosshair Settings
             useCustomCrosshair              = Config.Bind<bool>("Crosshair Settings", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));
@@ -157,6 +158,7 @@ namespace ImmersiveHud
 
             // Display Scenario Settings
 
+
             // Crosshair Sprites
             crosshairSprite                 = LoadCrosshairTexture("ImmersiveHud/crosshair.png");
             crosshairBowSprite              = LoadCrosshairTexture("ImmersiveHud/bowcrosshair.png");
@@ -169,7 +171,6 @@ namespace ImmersiveHud
         [HarmonyPatch(typeof(Hud), "Awake")]
         public class Hud_Awake_Patch
         {
-            // Can't seem to check for existence of quick slots object on awake for some reason.
             private static void Postfix(Hud __instance)
             {
                 if (!isEnabled.Value)
@@ -181,6 +182,10 @@ namespace ImmersiveHud
                 foreach (string name in hudElementNames)
                 {
                     hudElements.Add(name, new HudElement(name));
+
+                    if (hudRoot.Find(name) == null)
+                        continue;
+   
                     hudElements[name].element = hudRoot.Find(name);
                     hudElements[name].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
                 }  

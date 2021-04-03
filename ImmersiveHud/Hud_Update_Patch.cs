@@ -12,27 +12,23 @@ namespace ImmersiveHud
         public static void setCompatibility(Transform hud)
         {
             // Compatibility check for Quick Slots mod.
-            if (hud.Find("QuickSlotsHotkeyBar"))
+            if (quickSlotsEnabled.Value && hudElements["QuickSlotsHotkeyBar"].element == null)
             {
-                hasQuickSlotsEnabled = true;
-
-                if (!hasCanvasQuickSlots)
+                if (hud.Find("QuickSlotsHotkeyBar"))
                 {
-                    hud.Find("QuickSlotsHotkeyBar").GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasCanvasQuickSlots = true;
+                    hudElements["QuickSlotsHotkeyBar"].element = hud.Find("QuickSlotsHotkeyBar");
+                    hudElements["QuickSlotsHotkeyBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasQuickSlotsEnabled = true;
+                } 
+                else
+                {
+                    hasQuickSlotsEnabled = false;
                 }
-            }
-            else
-            {
-                hasQuickSlotsEnabled = false;
             }
         }
 
         public static void updateHudElementTransparency(HudElement hudElement)
         {
-            if (hudElement.elementName == "QuickSlotsHotkeyBar" && !hasQuickSlotsEnabled)
-                return;
-
             float lerpedAlpha;
             lerpedAlpha = Mathf.Lerp(hudElement.lastSetAlpha, hudElement.targetAlpha, hudElement.timeFade / hudFadeDuration.Value);
 
@@ -136,6 +132,19 @@ namespace ImmersiveHud
                 {
                     hudElements["MiniMap"].targetAlpha = 0;
                 }
+
+                // QuickSlots Display
+                if (quickSlotsEnabled.Value && hasQuickSlotsEnabled)
+                {                  
+                    if (displayQuickSlotsAlways.Value)
+                    {
+                        hudElements["QuickSlotsHotkeyBar"].targetAlpha = 1;
+                    }
+                    else
+                    {
+                        hudElements["QuickSlotsHotkeyBar"].targetAlpha = 0;
+                    }
+                }
             }
         }
 
@@ -149,10 +158,14 @@ namespace ImmersiveHud
             Transform hudRoot = __instance.transform.Find("hudroot");
 
             getPlayerData(hudRoot);
-            //setCompatibility(hudRoot);
+            setCompatibility(hudRoot);
             setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey));
 
-            foreach (string name in hudElementNames) {
+            foreach (string name in hudElementNames) 
+            {
+                if (hudElements[name].element == null)
+                    continue;
+
                 hudElements[name].targetAlphaReached = checkHudLerpDuration(hudElements[name].timeFade);
 
                 if (!hudElements[name].targetAlphaReached)
