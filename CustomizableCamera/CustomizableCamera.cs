@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.2")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.3")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {

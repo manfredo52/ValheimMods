@@ -58,8 +58,6 @@ namespace CustomizableCamera
                     float minDistance = __instance.m_minDistance;
                     float prevTargetDistance = targetDistance;
 
-                    Debug.Log("Distance: " + ___m_distance + "    targetDistance: " + targetDistance);
-
                     targetDistance -= Input.GetAxis("Mouse ScrollWheel") * cameraZoomSensitivity.Value;
                     float max = localPlayer.GetControlledShip() != null ? __instance.m_maxDistanceBoat : __instance.m_maxDistance;
                     targetDistance = Mathf.Clamp(targetDistance, minDistance, max);
