@@ -4,11 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using HarmonyLib;
 
-// To-Do:
-//  Linear interpolation for switching camera zoom distance.
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.1")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.2")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -30,6 +28,7 @@ namespace CustomizableCamera
         public static float defaultTimeDuration = 5.0f;
         public static float defaultBowZoomTimeDuration = 3.0f;
         public static Vector3 defaultPosition = new Vector3(0.25f, 0.25f, 0.00f);
+        public static float smoothZoomSpeed = 3f;
 
         // Mouse Sensitivity
         public static float playerMouseSensitivity;
@@ -100,6 +99,12 @@ namespace CustomizableCamera
         public static ConfigEntry<KeyboardShortcut> bowCancelDrawKey;
         public static ConfigEntry<float> cameraBowZoomFOV;
 
+        // Bow Zoom Interpolation Settings
+        public static ConfigEntry<float> timeFOVDuration;
+        public static ConfigEntry<float> timeBowZoomFOVDuration;
+        public static ConfigEntry<interpolationTypes> timeBowZoomInterpolationType;
+        public static ConfigEntry<float> timeCameraPosDuration;
+
         // Misc Camera Settings
         public static ConfigEntry<float> cameraSmoothness;
         public static ConfigEntry<float> cameraDistance;
@@ -107,12 +112,7 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraMaxDistanceBoat;
         public static ConfigEntry<float> cameraZoomSensitivity;
         public static ConfigEntry<KeyboardShortcut> swapShoulderViewKey;
-
-        // Linear Interpolation Settings
-        public static ConfigEntry<float> timeFOVDuration;
-        public static ConfigEntry<float> timeBowZoomFOVDuration;
-        public static ConfigEntry<interpolationTypes> timeBowZoomInterpolationType;
-        public static ConfigEntry<float> timeCameraPosDuration;
+        public static ConfigEntry<bool> smoothZoomEnabled;
 
         // Variables for FOV linear interpolation
         public static float timeFOV = 0;
@@ -137,6 +137,8 @@ namespace CustomizableCamera
         public static bool playerIsMoving;
         public static bool isFirstPerson;
         public static bool onSwappedShoulder;
+
+        public static float cameraZoomSensitivityTemp = 10f;
 
         public enum interpolationTypes
         {
@@ -169,6 +171,7 @@ namespace CustomizableCamera
             cameraMaxDistanceBoat   = Config.Bind<float>("- Misc -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
             cameraZoomSensitivity   = Config.Bind<float>("- Misc -", "cameraZoomSensitivity", defaultZoomSensitivity, new ConfigDescription("How much the camera zooms in or out when changing camera distance with the scroll wheel. Takes effect on game restart.", new AcceptableValueRange<float>(1, 25)));
             swapShoulderViewKey     = Config.Bind<KeyboardShortcut>("- Misc -", "swapShoulderViewKey", new KeyboardShortcut(KeyCode.B), "Keyboard shortcut or mouse button to swap shoulder views.");
+            smoothZoomEnabled       = Config.Bind<bool>("- Misc -", "smoothZoomEnabled", true, "Enable if the zooming in and out to be smooth instead of an instant change.");
 
             // Time Settings
             timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
@@ -246,9 +249,13 @@ namespace CustomizableCamera
         {
             private static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
             {
+                if (!isEnabled.Value)
+                    return;
+
                 setMiscCameraSettings(__instance);
                 ___m_distance = cameraDistance.Value;
                 ___m_zoomSens = cameraZoomSensitivity.Value;
+                cameraZoomSensitivityTemp = cameraZoomSensitivity.Value;
             }
         }
 
@@ -257,6 +264,9 @@ namespace CustomizableCamera
         {
             private static void Postfix(GameCamera __instance)
             {
+                if (!isEnabled.Value)
+                    return;
+
                 setMiscCameraSettings(__instance);
             }
         }

@@ -5,29 +5,29 @@ using HarmonyLib;
 namespace CustomizableCamera
 {
     [HarmonyPatch(typeof(GameCamera), "GetCameraPosition")]
-    public class GameCamera_CameraPosition_Patch : CustomizableCamera
+    public class GameCamera_GetCameraPosition_Patch : CustomizableCamera
     {
         // Reimplement camera settings reset
         // Reset settings on settings save.
-        private static void resetCameraSettings(GameCamera __instance)
+        public static void resetCameraSettings(GameCamera __instance)
         {
             __instance.m_fov = defaultFOV;
             __instance.m_3rdOffset = defaultPosition;
         }
 
-        private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
+        public static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
         {
             __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration.Value);
             lastSetPos = __instance.m_3rdOffset;
         }
 
-        private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
+        public static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
         {
             __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeFOVDuration.Value);
             lastSetFOV = __instance.m_fov;
         }
 
-        private static void moveToNewCameraFOVBowZoom(GameCamera __instance, float targetFOV, float time, interpolationTypes interpType)
+        public static void moveToNewCameraFOVBowZoom(GameCamera __instance, float targetFOV, float time, interpolationTypes interpType)
         {
             if (interpType == interpolationTypes.SmoothStep)
                 __instance.m_fov = Mathf.SmoothStep(lastSetFOV, targetFOV, time / timeBowZoomFOVDuration.Value);
@@ -86,7 +86,7 @@ namespace CustomizableCamera
             }
         }
 
-        private static void setValuesBasedOnCharacterState(Player __instance, bool isFirstPerson)
+        public static void setValuesBasedOnCharacterState(Player __instance, bool isFirstPerson)
         {
             __characterStatePrev = __characterState;
 
@@ -166,7 +166,7 @@ namespace CustomizableCamera
             }
         }
 
-        private static bool checkIfFirstPerson(float ___m_distance)
+        public static bool checkIfFirstPerson(float ___m_distance)
         {
             if (___m_distance <= 0.0)
                 return true;
@@ -178,14 +178,8 @@ namespace CustomizableCamera
         {
             Player localPlayer = Player.m_localPlayer;
 
-            if (!__instance || !localPlayer)
+            if (!isEnabled.Value || !__instance || !localPlayer)
                 return;
-
-            if (!isEnabled.Value) 
-            {
-                resetCameraSettings(__instance);
-                return;
-            }
 
             isFirstPerson = checkIfFirstPerson(___m_distance);
             setValuesBasedOnCharacterState(localPlayer, isFirstPerson);

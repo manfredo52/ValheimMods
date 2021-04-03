@@ -10,7 +10,8 @@ namespace CustomizableCamera
 
         private static void Prefix(Player __instance, ref bool block, ref bool blockHold)
         {
-            if (!__instance) return;
+            if (!isEnabled.Value || !__instance)
+                return;
 
             ItemDrop.ItemData playerItemEquipped = __instance.GetLeftItem();
 

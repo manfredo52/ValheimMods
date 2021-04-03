@@ -82,6 +82,9 @@ namespace CustomizableCamera
 
         private static void Postfix(Hud __instance)
         {
+            if (!isEnabled.Value || !__instance)
+                return;
+
             if (playerBowCrosshairEditsEnabled.Value)
             {
                 setCrosshairState();
