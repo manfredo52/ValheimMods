@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.6")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.7")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -21,7 +21,8 @@ namespace ImmersiveHud
         public static ConfigEntry<KeyboardShortcut> hideHudKey;
         public static ConfigEntry<bool> hudHiddenNotification;
         public static ConfigEntry<bool> hudHiddenOnStart;
-        public static ConfigEntry<float> hudFadeDuration;   
+        public static ConfigEntry<float> hudFadeDuration;
+        public static ConfigEntry<float> hudDisplayDuration;
 
         // Crosshair Settings
         public static ConfigEntry<bool> useCustomCrosshair;
@@ -45,7 +46,7 @@ namespace ImmersiveHud
 
         // Hud Element Settings
         public static ConfigEntry<bool> displayHealthAlways;
-        public static ConfigEntry<bool> displayHotbarAlways;
+        public static ConfigEntry<bool> displayHotKeyBarAlways;
         public static ConfigEntry<bool> displayForsakenPowerAlways;
         public static ConfigEntry<bool> displayStatusEffectsAlways;
         public static ConfigEntry<bool> displayMiniMapAlways;
@@ -60,15 +61,33 @@ namespace ImmersiveHud
         public static bool hudHidden;
 
         // Hud Element - Health
+        public static ConfigEntry<bool> displayHealthInInventory;
+        //public static ConfigEntry<bool> displayHealthDuringRegen;
+        //public static ConfigEntry<bool> displayHealthWhenDamaged;
+        //public static ConfigEntry<bool> displayHealthWhenFoodConsumed;
+        // public static ConfigEntry<bool> displayHealthWhenHungry; //"You could eat another bite"
+        public static ConfigEntry<bool> displayHealthWhenBelowPercentage;
+        public static ConfigEntry<float> healthPercentage;
 
-        // Hud Element - Forsaken
+        // Hud Element - Forsaken Power
+        public static ConfigEntry<bool> displayPowerInInventory;
+        public static ConfigEntry<bool> displayPowerOnActivation;
+        public static ConfigEntry<bool> displayPowerWhenTimeChanges;
+        public static ConfigEntry<bool> displayPowerOnReady;
+        public static ConfigEntry<float> powerTimeChangeInterval;
 
         // Hud Element - HotKeyBar
+        public static ConfigEntry<bool> displayHotKeyBarInInventory;
+
+        // Hud Element - Status Effects
+        public static ConfigEntry<bool> displayStatusEffectsInInventory;
 
         // Hud Element - MiniMap
+        public static ConfigEntry<bool> displayMiniMapInInventory;
         public static bool isMiniMapActive;
 
         // Hud Element - QuickSlots
+        public static ConfigEntry<bool> displayQuickSlotsInInventory;
 
         // Character States
         public static bool characterEquippedItem;
@@ -94,9 +113,11 @@ namespace ImmersiveHud
             public Transform element;
             public string elementName;
             public bool targetAlphaReached;
+            public float targetAlphaPrev;
             public float targetAlpha;
             public float lastSetAlpha;
             public float timeFade = 0;
+            public float timeDisplay = 0;
 
             public HudElement(string name)
             {
@@ -135,31 +156,55 @@ namespace ImmersiveHud
             hudHiddenOnStart        = Config.Bind<bool>("- Main Settings -", "hudHiddenOnStart", false, "Hide the hud when the game is started.");
             hudHiddenNotification   = Config.Bind<bool>("- Main Settings -", "hudHiddenNotification", false, "Enable notifications in the top left corner for hiding the hud.");
             hudFadeDuration         = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1f, "How quickly the hud fades in or out.");
+            hudDisplayDuration      = Config.Bind<float>("- Main Settings -", "hudDisplayDuration", 1f, "How long a hud element should stay up for when it is activated for certain conditions.");
 
             // Compatibility
-            quickSlotsEnabled   = Config.Bind<bool>("Compatibility", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
+            quickSlotsEnabled   = Config.Bind<bool>("- Mod Compatibility -", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
 
             // Crosshair Settings
-            useCustomCrosshair              = Config.Bind<bool>("Crosshair Settings", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));
-            useCustomBowCrosshair           = Config.Bind<bool>("Crosshair Settings", "useCustomBowCrosshair", false, new ConfigDescription("Enable or disable the new crosshair for the bow draw.", null, new ConfigurationManagerAttributes { Order = 2 }));
-            crosshairColor                  = Config.Bind<Color>("Crosshair Settings", "crosshairColor", Color.white, "Color and transparency of the crosshair.");
-            crosshairBowDrawColor           = Config.Bind<Color>("Crosshair Settings", "crosshairBowDrawColor", Color.yellow, "Color and transparency of the bow draw crosshair.");
-            displayCrosshairAlways          = Config.Bind<bool>("Crosshair Settings", "displayCrosshairAlways", true, "Always display the crosshair, overriding other display crosshair settings.");
-            displayBowDrawCrosshair         = Config.Bind<bool>("Crosshair Settings", "displayBowDrawCrosshair", true, "Display the bow draw crosshair.");     
-            displayCrosshairOnActivation    = Config.Bind<bool>("Crosshair Settings", "displayCrosshairOnActivation", false, "Display crosshair when hovering over an activatable object.");
-            displayCrosshairOnEquipped      = Config.Bind<bool>("Crosshair Settings", "displayCrosshairOnEquipped", false, "Display crosshair when an item is equipped in either hand.");
-            displayCrosshairOnBowEquipped   = Config.Bind<bool>("Crosshair Settings", "displayCrosshairOnBowEquipped", false, "Display crosshair when the bow is equipped.");
+            useCustomCrosshair              = Config.Bind<bool>("- Settings: Crosshair -", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));
+            useCustomBowCrosshair           = Config.Bind<bool>("- Settings: Crosshair -", "useCustomBowCrosshair", false, new ConfigDescription("Enable or disable the new crosshair for the bow draw.", null, new ConfigurationManagerAttributes { Order = 2 }));
+            crosshairColor                  = Config.Bind<Color>("- Settings: Crosshair -", "crosshairColor", Color.white, "Color and transparency of the crosshair.");
+            crosshairBowDrawColor           = Config.Bind<Color>("- Settings: Crosshair -", "crosshairBowDrawColor", Color.yellow, "Color and transparency of the bow draw crosshair.");
+            displayCrosshairAlways          = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairAlways", true, "Always display the crosshair, overriding other display crosshair settings.");
+            displayBowDrawCrosshair         = Config.Bind<bool>("- Settings: Crosshair -", "displayBowDrawCrosshair", true, "Display the bow draw crosshair.");     
+            displayCrosshairOnActivation    = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnActivation", false, "Display crosshair when hovering over an activatable object.");
+            displayCrosshairOnEquipped      = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnEquipped", false, "Display crosshair when an item is equipped in either hand.");
+            displayCrosshairOnBowEquipped   = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnBowEquipped", false, "Display crosshair when the bow is equipped.");
 
             // Display Elements Settings
-            displayHealthAlways             = Config.Bind<bool>("Display Settings", "displayHealthAlways", false, "Always display the health panel.");
-            displayHotbarAlways             = Config.Bind<bool>("Display Settings", "displayHotbarAlways", false, "Always display the hotbar.");
-            displayForsakenPowerAlways      = Config.Bind<bool>("Display Settings", "displayForsakenPowerAlways", false, "Always display the forsaken power.");
-            displayStatusEffectsAlways      = Config.Bind<bool>("Display Settings", "displayStatusEffectsAlways", false, "Always display status effects.");
-            displayMiniMapAlways            = Config.Bind<bool>("Display Settings", "displayMiniMapAlways", false, "Always display the minimap.");
-            displayQuickSlotsAlways         = Config.Bind<bool>("Display Settings", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
+            displayHealthAlways         = Config.Bind<bool>("- Settings: Display -", "displayHealthAlways", false, "Always display the health panel.");
+            displayHotKeyBarAlways      = Config.Bind<bool>("- Settings: Display -", "displayHotbarAlways", false, "Always display the hotbar.");
+            displayForsakenPowerAlways  = Config.Bind<bool>("- Settings: Display -", "displayForsakenPowerAlways", false, "Always display the forsaken power.");
+            displayStatusEffectsAlways  = Config.Bind<bool>("- Settings: Display -", "displayStatusEffectsAlways", false, "Always display status effects.");
+            displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
+            displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
 
-            // Display Scenario Settings
+            // Display Scenario Settings - Health
+            displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
+            //displayHealthDuringRegen          = Config.Bind<bool>("Display - Health", "displayDuringRegen", false, "During health regen, the health panel will display.");
+            //displayHealthWhenDamaged          = Config.Bind<bool>("Display - Health", "displayWhenDamaged", false, "Display the health panel when damaged.");
+            //displayHealthWhenFoodConsumed     = Config.Bind<bool>("Display - Health", "displayWhenFoodConsumed", false, "Display the health panel when you consume food.");
+            displayHealthWhenBelowPercentage    = Config.Bind<bool>("Display - Health", "displayWhenBelowPercentage", false, "When you are at or below a certain health percentage, display the health panel.");
+            healthPercentage                    = Config.Bind<float>("Display - Health", "healthPercentage", 0.75f, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0f, 1f)));
 
+            // Display Scenario Settings - Forsaken Power
+            displayPowerInInventory         = Config.Bind<bool>("Display - Forsaken Power", "displayPowerInInventory", true, "Display the forsaken power when in the inventory.");
+            displayPowerOnActivation        = Config.Bind<bool>("Display - Forsaken Power", "displayPowerOnActivation", false, "Display the forsaken power when the key to use it is pressed.");
+            //displayPowerWhenTimeChanges
+            //displayPowerOnReady
+
+            // Display Scenario Settings - HotKeyBar
+            displayHotKeyBarInInventory         = Config.Bind<bool>("Display - HotKeyBar", "displayHotKeyBarInInventory", true, "Display the hot key bar when in the inventory.");
+
+            // Display Scenario Settings - Status Effects
+            displayStatusEffectsInInventory     = Config.Bind<bool>("Display - Status Effects", "displayStatusEffectsInInventory", true, "Display status effects when in the inventory.");
+
+            // Display Scenario Settings - MiniMap
+            displayMiniMapInInventory       = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
+
+            // Display Scenario Settings - Quick Slots
+            displayQuickSlotsInInventory    = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsInInventory", true, "Display quick slots when in the inventory.");
 
             // Crosshair Sprites
             crosshairSprite                 = LoadCrosshairTexture("ImmersiveHud/crosshair.png");

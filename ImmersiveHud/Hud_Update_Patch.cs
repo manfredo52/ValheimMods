@@ -1,7 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 using HarmonyLib;
 
 namespace ImmersiveHud
@@ -63,6 +60,17 @@ namespace ImmersiveHud
 
         public static void setValuesBasedOnHud(bool pressedKey)
         {
+            Player localPlayer = Player.m_localPlayer;
+
+            // Store previous target alpha for timer reset.
+            foreach (string name in hudElementNames)
+            {
+                if (hudElements[name].element == null)
+                    continue;
+
+                hudElements[name].targetAlphaPrev = hudElements[name].targetAlpha;
+            }         
+
             if (pressedKey)
             {
                 hudHidden = !hudHidden;
@@ -76,7 +84,10 @@ namespace ImmersiveHud
                 }
 
                 foreach (string name in hudElementNames)
+                {
                     hudElements[name].timeFade = 0;
+                    hudElements[name].timeDisplay = 0;
+                }
             }
 
             if (hudHidden)
@@ -92,27 +103,45 @@ namespace ImmersiveHud
             else
             {
                 // Health Display
-                if (displayHealthAlways.Value)
+                if (displayHealthAlways.Value || (displayHealthInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["healthpanel"].targetAlpha = 1;
                 }
                 else
                 {
-                    hudElements["healthpanel"].targetAlpha = 0;
+                    // Display health panel when below a given percentage.
+                    if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
+                        hudElements["healthpanel"].targetAlpha = 1;
+                    else
+                        hudElements["healthpanel"].targetAlpha = 0;
                 }
 
                 // Forsaken Power Display
-                if (displayForsakenPowerAlways.Value)
+                if (displayForsakenPowerAlways.Value || (displayPowerInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["GuardianPower"].targetAlpha = 1;
                 }
                 else
-                {
-                    hudElements["GuardianPower"].targetAlpha = 0;
+                {             
+                    // Show the forsaken power for a duration when the key is pressed.
+                    if (displayPowerOnActivation.Value)
+                    {
+                        if (ZInput.GetButtonDown("GPower") || ZInput.GetButtonDown("JoyGPower"))
+                        {
+                            hudElements["GuardianPower"].targetAlpha = 1;
+                            hudElements["GuardianPower"].timeDisplay = 0;
+                        } 
+                        else if (hudElements["GuardianPower"].timeDisplay >= hudDisplayDuration.Value)
+                        {
+                            hudElements["GuardianPower"].targetAlpha = 0;
+                        }
+                    } 
+                    else
+                        hudElements["GuardianPower"].targetAlpha = 0;
                 }
 
-                // Hot Key Bar Display
-                if (displayHotbarAlways.Value)
+                // HotKeyBar Display
+                if (displayHotKeyBarAlways.Value || (displayHotKeyBarInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["HotKeyBar"].targetAlpha = 1;
                 }
@@ -122,7 +151,7 @@ namespace ImmersiveHud
                 }
 
                 // Status Effects Display
-                if (displayStatusEffectsAlways.Value)
+                if (displayStatusEffectsAlways.Value || (displayStatusEffectsInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["StatusEffects"].targetAlpha = 1;
                 }
@@ -132,7 +161,7 @@ namespace ImmersiveHud
                 }
 
                 // MiniMap Display
-                if (displayMiniMapAlways.Value)
+                if (displayMiniMapAlways.Value || (displayMiniMapInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["MiniMap"].targetAlpha = 1;
                 }
@@ -143,8 +172,8 @@ namespace ImmersiveHud
 
                 // QuickSlots Display
                 if (quickSlotsEnabled.Value && hasQuickSlotsEnabled)
-                {                  
-                    if (displayQuickSlotsAlways.Value)
+                {
+                    if (displayQuickSlotsAlways.Value || (displayQuickSlotsInInventory.Value && InventoryGui.IsVisible()))
                     {
                         hudElements["QuickSlotsHotkeyBar"].targetAlpha = 1;
                     }
@@ -153,6 +182,24 @@ namespace ImmersiveHud
                         hudElements["QuickSlotsHotkeyBar"].targetAlpha = 0;
                     }
                 }
+            }
+
+            // Reset timer when the target alpha changed.
+            foreach (string name in hudElementNames)
+            {
+                // Reset fade timers if they go on for too long.
+                if (hudElements[name].timeFade > 240f)
+                    hudElements[name].timeFade = 0;
+
+                // Reset display timers if they go on for too long.
+                if (hudElements[name].timeDisplay > 240f)
+                    hudElements[name].timeDisplay = 0;
+
+                if (hudElements[name].element == null)
+                    continue;
+
+                if (hudElements[name].targetAlphaPrev != hudElements[name].targetAlpha)
+                    hudElements[name].timeFade = 0;               
             }
         }
 
@@ -180,6 +227,10 @@ namespace ImmersiveHud
                 {
                     hudElements[name].timeFade += Time.deltaTime;
                     updateHudElementTransparency(hudElements[name]);
+                } 
+                else
+                {
+                    hudElements[name].timeDisplay += Time.deltaTime;
                 }
             }
         }
