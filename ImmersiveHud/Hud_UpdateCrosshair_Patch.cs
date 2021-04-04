@@ -29,9 +29,18 @@ namespace ImmersiveHud
             }
         }
 
-        public static void setValuesBasedOnHud()
-        {        
+        public static void setValuesBasedOnHud(Player player)
+        {
+            GameObject hoverObject = player.GetHoverObject();
+            Hoverable hoverable = hoverObject ? hoverObject.GetComponentInParent<Hoverable>() : null;
+            if (hoverable != null && !TextViewer.instance.IsVisible())
+                isLookingAtActivatable = true;
+            else
+                isLookingAtActivatable = false;
+
             if (displayCrosshairAlways.Value)
+                targetCrosshairAlpha = crosshairColor.Value.a;
+            else if (displayCrosshairWhenBuilding.Value && player.InPlaceMode())
                 targetCrosshairAlpha = crosshairColor.Value.a;
             else if (displayCrosshairOnActivation.Value && isLookingAtActivatable)
                 targetCrosshairAlpha = crosshairColor.Value.a;
@@ -48,14 +57,7 @@ namespace ImmersiveHud
             playerCrosshair = __instance.m_crosshair;
             playerBowCrosshair = __instance.m_crosshairBow;
 
-            GameObject hoverObject = player.GetHoverObject();
-            Hoverable hoverable = hoverObject ? hoverObject.GetComponentInParent<Hoverable>() : null;
-            if (hoverable != null && !TextViewer.instance.IsVisible())
-                isLookingAtActivatable = true;
-            else
-                isLookingAtActivatable = false;
-
-            setValuesBasedOnHud();
+            setValuesBasedOnHud(player);
             updateCrosshairHudElement(bowDrawPercentage);
         }
     }

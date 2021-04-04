@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.7")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.8")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -30,6 +30,7 @@ namespace ImmersiveHud
         public static ConfigEntry<Color> crosshairColor;
         public static ConfigEntry<Color> crosshairBowDrawColor;
         public static ConfigEntry<bool> displayCrosshairAlways;
+        public static ConfigEntry<bool> displayCrosshairWhenBuilding;
         public static ConfigEntry<bool> displayCrosshairOnActivation;
         public static ConfigEntry<bool> displayCrosshairOnEquipped;
         public static ConfigEntry<bool> displayCrosshairOnBowEquipped;
@@ -167,7 +168,8 @@ namespace ImmersiveHud
             crosshairColor                  = Config.Bind<Color>("- Settings: Crosshair -", "crosshairColor", Color.white, "Color and transparency of the crosshair.");
             crosshairBowDrawColor           = Config.Bind<Color>("- Settings: Crosshair -", "crosshairBowDrawColor", Color.yellow, "Color and transparency of the bow draw crosshair.");
             displayCrosshairAlways          = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairAlways", true, "Always display the crosshair, overriding other display crosshair settings.");
-            displayBowDrawCrosshair         = Config.Bind<bool>("- Settings: Crosshair -", "displayBowDrawCrosshair", true, "Display the bow draw crosshair.");     
+            displayBowDrawCrosshair         = Config.Bind<bool>("- Settings: Crosshair -", "displayBowDrawCrosshair", true, "Display the bow draw crosshair.");
+            displayCrosshairWhenBuilding    = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairWhenBuilding", true, "Display the crosshair when you have the hammer equipped.");
             displayCrosshairOnActivation    = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnActivation", false, "Display crosshair when hovering over an activatable object.");
             displayCrosshairOnEquipped      = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnEquipped", false, "Display crosshair when an item is equipped in either hand.");
             displayCrosshairOnBowEquipped   = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairOnBowEquipped", false, "Display crosshair when the bow is equipped.");
