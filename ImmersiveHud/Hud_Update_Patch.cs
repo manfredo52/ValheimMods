@@ -38,14 +38,6 @@ namespace ImmersiveHud
             hudElement.element.GetComponent<CanvasGroup>().alpha = lerpedAlpha;
         }
 
-        public static bool checkHudLerpDuration(float timeElapsed)
-        {
-            if (timeElapsed >= hudFadeDuration.Value)
-                return true;
-            else
-                return false;
-        }
-
         public static void getPlayerData(Transform hud)
         {
             Minimap playerMap = hud.Find("MiniMap").GetComponent<Minimap>();
@@ -58,20 +50,18 @@ namespace ImmersiveHud
                 hudElements["MiniMap"].timeFade = 0;
         }
 
-        public static void setValuesBasedOnHud(bool pressedKey)
+        public static void setValuesBasedOnHud(bool pressedHideKey, bool pressedShowKey)
         {
             Player localPlayer = Player.m_localPlayer;
 
             // Store previous target alpha for timer reset.
             foreach (string name in hudElementNames)
             {
-                if (hudElements[name].element == null)
-                    continue;
+                if (hudElements[name].element != null)
+                    hudElements[name].targetAlphaPrev = hudElements[name].targetAlpha;
+            }
 
-                hudElements[name].targetAlphaPrev = hudElements[name].targetAlpha;
-            }         
-
-            if (pressedKey)
+            if (pressedHideKey)
             {
                 hudHidden = !hudHidden;
 
@@ -84,10 +74,7 @@ namespace ImmersiveHud
                 }
 
                 foreach (string name in hudElementNames)
-                {
-                    hudElements[name].timeFade = 0;
-                    hudElements[name].timeDisplay = 0;
-                }
+                    hudElements[name].resetTimers();
             }
 
             if (hudHidden)
@@ -109,11 +96,15 @@ namespace ImmersiveHud
                 }
                 else
                 {
+                    // Display when key pressed
+                    if (pressedShowKey && showHealthOnKeyPressed.Value)
+                        hudElements["healthpanel"].showHudForDuration();
+
                     // Display health panel when below a given percentage.
                     if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
-                        hudElements["healthpanel"].targetAlpha = 1;
+                        hudElements["healthpanel"].hudSetTargetAlpha(1);
                     else
-                        hudElements["healthpanel"].targetAlpha = 0;
+                        hudElements["healthpanel"].hudSetTargetAlpha(0);
                 }
 
                 // Forsaken Power Display
@@ -122,22 +113,16 @@ namespace ImmersiveHud
                     hudElements["GuardianPower"].targetAlpha = 1;
                 }
                 else
-                {             
+                {
+                    // Display when key pressed
+                    if (pressedShowKey && showPowerOnKeyPressed.Value)
+                        hudElements["GuardianPower"].showHudForDuration();
+
                     // Show the forsaken power for a duration when the key is pressed.
-                    if (displayPowerOnActivation.Value)
-                    {
-                        if (ZInput.GetButtonDown("GPower") || ZInput.GetButtonDown("JoyGPower"))
-                        {
-                            hudElements["GuardianPower"].targetAlpha = 1;
-                            hudElements["GuardianPower"].timeDisplay = 0;
-                        } 
-                        else if (hudElements["GuardianPower"].timeDisplay >= hudDisplayDuration.Value)
-                        {
-                            hudElements["GuardianPower"].targetAlpha = 0;
-                        }
-                    } 
-                    else
-                        hudElements["GuardianPower"].targetAlpha = 0;
+                    if (displayPowerOnActivation.Value && (ZInput.GetButtonDown("GPower") || ZInput.GetButtonDown("JoyGPower")))
+                        hudElements["GuardianPower"].showHudForDuration();
+
+                    hudElements["GuardianPower"].hudSetTargetAlpha(0);
                 }
 
                 // HotKeyBar Display
@@ -147,7 +132,18 @@ namespace ImmersiveHud
                 }
                 else
                 {
-                    hudElements["HotKeyBar"].targetAlpha = 0;
+                    // Display when key pressed
+                    if (pressedShowKey && showHotKeyBarOnKeyPressed.Value)
+                        hudElements["HotKeyBar"].showHudForDuration();
+
+                    // Display on item switch/use
+                    if (displayHotKeyBarOnItemSwitch.Value && playerUsedHotBarItem)
+                    {
+                        hudElements["HotKeyBar"].showHudForDuration();
+                        playerUsedHotBarItem = false;
+                    }
+
+                    hudElements["HotKeyBar"].hudSetTargetAlpha(0);
                 }
 
                 // Status Effects Display
@@ -157,17 +153,25 @@ namespace ImmersiveHud
                 }
                 else
                 {
-                    hudElements["StatusEffects"].targetAlpha = 0;
+                    // Display when key pressed
+                    if (pressedShowKey && showStatusEffectsOnKeyPressed.Value)
+                        hudElements["StatusEffects"].showHudForDuration();
+
+                    hudElements["StatusEffects"].hudSetTargetAlpha(0);
                 }
 
                 // MiniMap Display
-                if (displayMiniMapAlways.Value || (displayMiniMapInInventory.Value && InventoryGui.IsVisible()))
+                if (displayMiniMapAlways.Value || (displayMiniMapInInventory.Value && InventoryGui.IsVisible()) || !isMiniMapActive)
                 {
                     hudElements["MiniMap"].targetAlpha = 1;
                 }
                 else
                 {
-                    hudElements["MiniMap"].targetAlpha = 0;
+                    // Display when key pressed
+                    if (pressedShowKey && showMiniMapOnKeyPressed.Value)
+                        hudElements["MiniMap"].showHudForDuration();
+
+                    hudElements["MiniMap"].hudSetTargetAlpha(0);
                 }
 
                 // QuickSlots Display
@@ -179,7 +183,11 @@ namespace ImmersiveHud
                     }
                     else
                     {
-                        hudElements["QuickSlotsHotkeyBar"].targetAlpha = 0;
+                        // Display when key pressed
+                        if (pressedShowKey && showQuickSlotsOnKeyPressed.Value)
+                            hudElements["QuickSlotsHotkeyBar"].showHudForDuration();
+
+                        hudElements["QuickSlotsHotkeyBar"].hudSetTargetAlpha(0);
                     }
                 }
             }
@@ -187,13 +195,7 @@ namespace ImmersiveHud
             // Reset timer when the target alpha changed.
             foreach (string name in hudElementNames)
             {
-                // Reset fade timers if they go on for too long.
-                if (hudElements[name].timeFade > 240f)
-                    hudElements[name].timeFade = 0;
-
-                // Reset display timers if they go on for too long.
-                if (hudElements[name].timeDisplay > 240f)
-                    hudElements[name].timeDisplay = 0;
+                hudElements[name].hudCheckDisplayTimer();
 
                 if (hudElements[name].element == null)
                     continue;
@@ -214,14 +216,14 @@ namespace ImmersiveHud
 
             getPlayerData(hudRoot);
             setCompatibility(hudRoot);
-            setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey));
+            setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey), Input.GetKey(showHudKey.Value.MainKey));
 
             foreach (string name in hudElementNames) 
             {
                 if (hudElements[name].element == null)
                     continue;
 
-                hudElements[name].targetAlphaReached = checkHudLerpDuration(hudElements[name].timeFade);
+                hudElements[name].hudCheckLerpDuration();
 
                 if (!hudElements[name].targetAlphaReached)
                 {

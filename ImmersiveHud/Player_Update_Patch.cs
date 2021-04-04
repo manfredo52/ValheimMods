@@ -3,31 +3,19 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [HarmonyPatch(typeof(Player), "Update")]
-    public class Player_Update_Patch : ImmersiveHud
+    [HarmonyPatch(typeof(Player), "UseHotbarItem")]
+    public class Player_UseHotbarItem_Patch : ImmersiveHud
     {
-        private static void Prefix(Player __instance)
+        private static void Postfix(int index)
         {
-            if (!__instance) return;
+            Player localPlayer = Player.m_localPlayer;
 
-            ItemDrop.ItemData playerItemEquippedLeft = __instance.GetLeftItem();
-            ItemDrop.ItemData playerItemEquippedRight = __instance.GetRightItem();
+            ItemDrop.ItemData itemAt = localPlayer.GetInventory().GetItemAt(index - 1, 0);
 
-            if (playerItemEquippedLeft != null && (playerItemEquippedLeft.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Bow))
-            {
-                characterEquippedBow = true;
-                characterEquippedItem = false;
-            } 
-            else if (playerItemEquippedLeft != null || playerItemEquippedRight != null)
-            {
-                characterEquippedBow = false;
-                characterEquippedItem = true;
-            }                
-            else
-            {
-                characterEquippedItem = false;
-                characterEquippedBow = false;
-            }         
+            if (itemAt == null)
+                return;
+
+            playerUsedHotBarItem = true;
         }
     }
 }

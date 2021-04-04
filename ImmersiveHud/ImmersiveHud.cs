@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.8")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.0.9")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -19,10 +19,11 @@ namespace ImmersiveHud
 
         // Main Settings
         public static ConfigEntry<KeyboardShortcut> hideHudKey;
+        public static ConfigEntry<KeyboardShortcut> showHudKey;
         public static ConfigEntry<bool> hudHiddenNotification;
         public static ConfigEntry<bool> hudHiddenOnStart;
         public static ConfigEntry<float> hudFadeDuration;
-        public static ConfigEntry<float> hudDisplayDuration;
+        public static ConfigEntry<float> showHudDuration;
 
         // Crosshair Settings
         public static ConfigEntry<bool> useCustomCrosshair;
@@ -61,7 +62,7 @@ namespace ImmersiveHud
         // Hud Element - All
         public static bool hudHidden;
 
-        // Hud Element - Health
+        // Hud Element - Health      
         public static ConfigEntry<bool> displayHealthInInventory;
         //public static ConfigEntry<bool> displayHealthDuringRegen;
         //public static ConfigEntry<bool> displayHealthWhenDamaged;
@@ -69,6 +70,7 @@ namespace ImmersiveHud
         // public static ConfigEntry<bool> displayHealthWhenHungry; //"You could eat another bite"
         public static ConfigEntry<bool> displayHealthWhenBelowPercentage;
         public static ConfigEntry<float> healthPercentage;
+        public static ConfigEntry<bool> showHealthOnKeyPressed;
 
         // Hud Element - Forsaken Power
         public static ConfigEntry<bool> displayPowerInInventory;
@@ -76,24 +78,33 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayPowerWhenTimeChanges;
         public static ConfigEntry<bool> displayPowerOnReady;
         public static ConfigEntry<float> powerTimeChangeInterval;
+        public static ConfigEntry<bool> showPowerOnKeyPressed;
 
         // Hud Element - HotKeyBar
         public static ConfigEntry<bool> displayHotKeyBarInInventory;
+        public static ConfigEntry<bool> displayHotKeyBarOnItemSwitch;
+        public static ConfigEntry<bool> showHotKeyBarOnKeyPressed;
 
-        // Hud Element - Status Effects
+        // Hud Element - Status Effects    
         public static ConfigEntry<bool> displayStatusEffectsInInventory;
+        public static ConfigEntry<bool> showStatusEffectsOnKeyPressed;
 
-        // Hud Element - MiniMap
+        // Hud Element - MiniMap      
         public static ConfigEntry<bool> displayMiniMapInInventory;
+        public static ConfigEntry<bool> showMiniMapOnKeyPressed;
         public static bool isMiniMapActive;
 
         // Hud Element - QuickSlots
         public static ConfigEntry<bool> displayQuickSlotsInInventory;
+        //public static ConfigEntry<bool> displayQuickSlotsOnItemSwitch;
+        public static ConfigEntry<bool> showQuickSlotsOnKeyPressed;
 
         // Character States
         public static bool characterEquippedItem;
         public static bool characterEquippedBow;
         public static bool isLookingAtActivatable;
+        public static bool playerUsedHotBarItem;
+        public static bool playerUsedQuickSlotsItem;
 
         // Other
         public static float fadeDuration = 0.5f;
@@ -119,11 +130,48 @@ namespace ImmersiveHud
             public float lastSetAlpha;
             public float timeFade = 0;
             public float timeDisplay = 0;
+            public bool isDisplaying;
 
             public HudElement(string name)
             {
                 element = null;
                 elementName = name;
+            }
+
+            public void hudSetTargetAlpha(float alpha)
+            {
+                if (!isDisplaying)
+                    targetAlpha = alpha;
+            }
+
+            public void hudCheckDisplayTimer()
+            {
+                if (timeDisplay >= showHudDuration.Value && isDisplaying)
+                {
+                    targetAlpha = 0;
+                    isDisplaying = false;
+                }                         
+            }
+
+            public  void hudCheckLerpDuration()
+            {
+                if (timeFade >= hudFadeDuration.Value)
+                    targetAlphaReached = true;
+                else
+                    targetAlphaReached = false;
+            }
+
+            public void showHudForDuration()
+            {
+                targetAlpha = 1;
+                timeDisplay = 0;
+                isDisplaying = true;
+            }
+
+            public void resetTimers()
+            {
+                timeFade = 0;
+                timeDisplay = 0;
             }
         }
 
@@ -157,7 +205,8 @@ namespace ImmersiveHud
             hudHiddenOnStart        = Config.Bind<bool>("- Main Settings -", "hudHiddenOnStart", false, "Hide the hud when the game is started.");
             hudHiddenNotification   = Config.Bind<bool>("- Main Settings -", "hudHiddenNotification", false, "Enable notifications in the top left corner for hiding the hud.");
             hudFadeDuration         = Config.Bind<float>("- Main Settings -", "hudFadeDuration", 1f, "How quickly the hud fades in or out.");
-            hudDisplayDuration      = Config.Bind<float>("- Main Settings -", "hudDisplayDuration", 1f, "How long a hud element should stay up for when it is activated for certain conditions.");
+            showHudDuration         = Config.Bind<float>("- Main Settings -", "showHudDuration", 1f, "How long a hud element should stay up for when it is activated for certain conditions.");
+            showHudKey              = Config.Bind<KeyboardShortcut>("- Main Settings -", "showHudKey", new KeyboardShortcut(KeyCode.G), "Keyboard shortcut or mouse button to display the hud for a duration.");
 
             // Compatibility
             quickSlotsEnabled   = Config.Bind<bool>("- Mod Compatibility -", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
@@ -182,31 +231,39 @@ namespace ImmersiveHud
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
             displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
 
-            // Display Scenario Settings - Health
+            // Display Scenario Settings - Health          
             displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
             //displayHealthDuringRegen          = Config.Bind<bool>("Display - Health", "displayDuringRegen", false, "During health regen, the health panel will display.");
             //displayHealthWhenDamaged          = Config.Bind<bool>("Display - Health", "displayWhenDamaged", false, "Display the health panel when damaged.");
             //displayHealthWhenFoodConsumed     = Config.Bind<bool>("Display - Health", "displayWhenFoodConsumed", false, "Display the health panel when you consume food.");
             displayHealthWhenBelowPercentage    = Config.Bind<bool>("Display - Health", "displayWhenBelowPercentage", false, "When you are at or below a certain health percentage, display the health panel.");
             healthPercentage                    = Config.Bind<float>("Display - Health", "healthPercentage", 0.75f, new ConfigDescription("How quickly the bow zooms in.", new AcceptableValueRange<float>(0f, 1f)));
+            showHealthOnKeyPressed              = Config.Bind<bool>("Display - Health", "showHealthOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
-            // Display Scenario Settings - Forsaken Power
+            // Display Scenario Settings - Forsaken Power           
             displayPowerInInventory         = Config.Bind<bool>("Display - Forsaken Power", "displayPowerInInventory", true, "Display the forsaken power when in the inventory.");
             displayPowerOnActivation        = Config.Bind<bool>("Display - Forsaken Power", "displayPowerOnActivation", false, "Display the forsaken power when the key to use it is pressed.");
             //displayPowerWhenTimeChanges
             //displayPowerOnReady
+            showPowerOnKeyPressed           = Config.Bind<bool>("Display - Forsaken Power", "showPowerOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
-            // Display Scenario Settings - HotKeyBar
-            displayHotKeyBarInInventory         = Config.Bind<bool>("Display - HotKeyBar", "displayHotKeyBarInInventory", true, "Display the hot key bar when in the inventory.");
+            // Display Scenario Settings - Hot Key Bar
+            displayHotKeyBarInInventory     = Config.Bind<bool>("Display - Hot Key Bar", "displayHotKeyBarInInventory", true, "Display the hot key bar when in the inventory.");
+            displayHotKeyBarOnItemSwitch    = Config.Bind<bool>("Display - Hot Key Bar", "displayHotKeyBarOnItemSwitch", false, "Display the hot key bar when you press any key for your hot bar items.");
+            showHotKeyBarOnKeyPressed       = Config.Bind<bool>("Display - Hot Key Bar", "showHotKeyBarOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
-            // Display Scenario Settings - Status Effects
+            // Display Scenario Settings - Status Effects 
             displayStatusEffectsInInventory     = Config.Bind<bool>("Display - Status Effects", "displayStatusEffectsInInventory", true, "Display status effects when in the inventory.");
+            showStatusEffectsOnKeyPressed       = Config.Bind<bool>("Display - Status Effects", "showStatusEffectsOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
             // Display Scenario Settings - MiniMap
-            displayMiniMapInInventory       = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
+            displayMiniMapInInventory   = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
+            showMiniMapOnKeyPressed     = Config.Bind<bool>("Display - MiniMap", "showMiniMapOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
-            // Display Scenario Settings - Quick Slots
+            // Display Scenario Settings - Quick Slots     
             displayQuickSlotsInInventory    = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsInInventory", true, "Display quick slots when in the inventory.");
+            //displayQuickSlotsOnItemSwitch = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsOnItemSwitch", false, "Display the quick slots when you press any key for your quick slot items.");
+            showQuickSlotsOnKeyPressed      = Config.Bind<bool>("Display - Quick Slots", "showQuickSlotsOnKeyPressed", true, "Show the health panel when the display key is pressed.");
 
             // Crosshair Sprites
             crosshairSprite                 = LoadCrosshairTexture("ImmersiveHud/crosshair.png");

@@ -82,6 +82,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Player_UseHotbarItem_Patch.cs" />
     <Compile Include="Player_Update_Patch.cs" />
     <Compile Include="Hud_UpdateCrosshair_Patch.cs" />
     <Compile Include="ConfigurationManagerAttributes.cs" />
