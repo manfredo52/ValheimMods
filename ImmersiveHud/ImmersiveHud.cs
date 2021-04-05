@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.0")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.1")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -175,7 +175,7 @@ namespace ImmersiveHud
             }
         }
 
-        public static Dictionary<string, HudElement> hudElements = new Dictionary<string, HudElement>();
+        public static Dictionary<string, HudElement> hudElements;
 
         public static Sprite LoadCrosshairTexture(string filename)
         {
@@ -283,6 +283,7 @@ namespace ImmersiveHud
                     return;
 
                 Transform hudRoot = __instance.transform.Find("hudroot");
+                hudElements = new Dictionary<string, HudElement>();
 
                 // Add CanvasGroup to each hud element on awake.
                 foreach (string name in hudElementNames)
