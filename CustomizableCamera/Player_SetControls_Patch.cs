@@ -92,7 +92,10 @@ namespace CustomizableCamera
             }
 
             if (run || autoRun || blockHold)
+            {
                 isPlayerAbleToCrouch = false;
+                characterCrouched = false;
+            }              
             else
                 isPlayerAbleToCrouch = true;
 
