@@ -91,4 +91,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(TargetFileName) "D:\Games\SteamLibrary\steamapps\common\Valheim\MO2\mods\User Interface - Immersive Hud"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
