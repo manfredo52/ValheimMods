@@ -194,6 +194,51 @@ namespace ImmersiveHud
                 }
 
                 // Stamina Bar Display
+                if (displayStaminaBarAlways.Value || (displayStaminaBarInInventory.Value && InventoryGui.IsVisible()))
+                {
+                    hudElements["staminapanel"].targetAlpha = 1;
+
+                    if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                        hudElements["BetterUI_StaminaBar"].targetAlpha = 1;
+                }
+                else
+                {
+                    // Display when key pressed
+                    if (pressedShowKey && showStaminaBarOnKeyPressed.Value)
+                    {
+                        hudElements["staminapanel"].showHudForDuration();
+
+                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
+                    }
+
+                    // Display stamina bar when stamina is used
+                    if (displayStaminaBarOnUse.Value && playerUsedStamina)
+                    {
+                        hudElements["staminapanel"].showHudForDuration();
+
+                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
+
+                        playerUsedStamina = false;
+                    }
+
+                    // Display health panel when below a given percentage.
+                    if (displayStaminaBarWhenBelowPercentage.Value && localPlayer.GetStaminaPercentage() <= staminaPercentage.Value)
+                    {
+                        hudElements["staminapanel"].hudSetTargetAlpha(1);
+
+                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                            hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
+                    }
+                    else
+                    {
+                        hudElements["staminapanel"].hudSetTargetAlpha(0);
+
+                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                            hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(0);
+                    }
+                }
 
                 // Forsaken Power Display
                 if (displayForsakenPowerAlways.Value || (displayPowerInInventory.Value && InventoryGui.IsVisible()))
@@ -297,7 +342,7 @@ namespace ImmersiveHud
         {
             Player localPlayer = Player.m_localPlayer;
 
-            if (!isEnabled.Value || !localPlayer)
+            if (!isEnabled.Value || !localPlayer || !__instance)
                 return;
 
             Transform hudRoot = __instance.transform.Find("hudroot");

@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.3")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.4")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -51,6 +51,7 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayHotKeyBarAlways;
         public static ConfigEntry<bool> displayForsakenPowerAlways;
         public static ConfigEntry<bool> displayStatusEffectsAlways;
+        public static ConfigEntry<bool> displayStaminaBarAlways;
         public static ConfigEntry<bool> displayMiniMapAlways;
         public static ConfigEntry<bool> displayQuickSlotsAlways;
         public static ConfigEntry<bool> displayBetterUIFoodAlways;
@@ -84,6 +85,11 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> showFoodBarOnKeyPressed;
 
         // Hud Element - Stamina Bar
+        public static ConfigEntry<bool> displayStaminaBarInInventory;
+        public static ConfigEntry<bool> displayStaminaBarOnUse;
+        public static ConfigEntry<bool> displayStaminaBarWhenBelowPercentage;
+        public static ConfigEntry<float> staminaPercentage;
+        public static ConfigEntry<bool> showStaminaBarOnKeyPressed;
 
         // Hud Element - Forsaken Power
         public static ConfigEntry<bool> displayPowerInInventory;
@@ -116,6 +122,7 @@ namespace ImmersiveHud
         public static bool characterEquippedItem;
         public static bool characterEquippedBow;
         public static bool isLookingAtActivatable;
+        public static bool playerUsedStamina;
         public static bool playerUsedHotBarItem;
         public static bool playerUsedQuickSlotsItem;
 
@@ -126,6 +133,7 @@ namespace ImmersiveHud
         public static string[] hudElementNames =
         {
             "healthpanel",
+            "staminapanel",
             "GuardianPower",
             "HotKeyBar",
             "StatusEffects",
@@ -247,6 +255,7 @@ namespace ImmersiveHud
             displayHotKeyBarAlways      = Config.Bind<bool>("- Settings: Display -", "displayHotbarAlways", false, "Always display the hotbar.");
             displayForsakenPowerAlways  = Config.Bind<bool>("- Settings: Display -", "displayForsakenPowerAlways", false, "Always display the forsaken power.");
             displayStatusEffectsAlways  = Config.Bind<bool>("- Settings: Display -", "displayStatusEffectsAlways", false, "Always display status effects.");
+            displayStaminaBarAlways     = Config.Bind<bool>("- Settings: Display -", "displayStaminaBarAlways", false, "Always display the stamina bar.");
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
             displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
             displayBetterUIFoodAlways   = Config.Bind<bool>("- Settings: Display -", "displayBetterUIFoodAlways", false, "Always display the food bar (Requires Better UI).");
@@ -279,6 +288,13 @@ namespace ImmersiveHud
             // Display Scenario Settings - Status Effects 
             displayStatusEffectsInInventory     = Config.Bind<bool>("Display - Status Effects", "displayStatusEffectsInInventory", true, "Display status effects when in the inventory.");
             showStatusEffectsOnKeyPressed       = Config.Bind<bool>("Display - Status Effects", "showStatusEffectsOnKeyPressed", true, "Show the status effects when the show hud key is pressed.");
+
+            // Display Scenario Settings - Stamina
+            displayStaminaBarInInventory    = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarInInventory", true, "Display the stamina bar when in the inventory.");
+            displayStaminaBarOnUse          = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarOnUse", true, "Display the stamina bar when stamina is used.");
+            displayStaminaBarWhenBelowPercentage = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenBelowPercentage", false, "When you are at or below a certain stamina percentage, display the stamina bar.");
+            staminaPercentage               = Config.Bind<float>("Display - Stamina Bar", "staminaPercentage", 0.95f, new ConfigDescription("Stamina percentage at which the stamina bar should be displayed", new AcceptableValueRange<float>(0f, 1f)));
+            showStaminaBarOnKeyPressed      = Config.Bind<bool>("Display - Stamina Bar", "showStaminaBarOnKeyPressed", true, "Show the stamina bar when the show hud key is pressed.");
 
             // Display Scenario Settings - MiniMap
             displayMiniMapInInventory   = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
