@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.6")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.7")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -77,6 +77,12 @@ namespace CustomizableCamera
         public static ConfigEntry<float> cameraSprintY;
         public static ConfigEntry<float> cameraSprintZ;
 
+        // Walk Camera Settings
+        public static ConfigEntry<float> cameraWalkFOV;
+        public static ConfigEntry<float> cameraWalkX;
+        public static ConfigEntry<float> cameraWalkY;
+        public static ConfigEntry<float> cameraWalkZ;
+
         // Boat Camera Settings
         public static ConfigEntry<float> cameraBoatFOV;
         public static ConfigEntry<float> cameraBoatX;
@@ -137,6 +143,7 @@ namespace CustomizableCamera
         public static bool characterCrouched;
         public static bool characterAiming;
         public static bool characterSprinting;
+        public static bool characterWalking;
         public static bool characterEquippedBow;
 
         public static bool playerIsMoving;
@@ -155,6 +162,7 @@ namespace CustomizableCamera
 
         public enum characterState {
             standing,
+            walking,
             sprinting,
             crouching,
             sailing,
@@ -208,6 +216,12 @@ namespace CustomizableCamera
             cameraSprintX = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintX", defaultPosition.x, "Camera X position when sprinting.");
             cameraSprintY = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintY", defaultPosition.y, "Camera Y position when sprinting.");
             cameraSprintZ = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintZ", defaultPosition.z, "Camera Z position when sprinting.");
+
+            // Walking
+            cameraWalkFOV = Config.Bind<float>("Camera Settings - Walk", "cameraWalkFOV", defaultFOV, "Camera fov when walking.");
+            cameraWalkX = Config.Bind<float>("Camera Settings - Walk", "cameraWalkX", defaultPosition.x, "Camera X position when walking.");
+            cameraWalkY = Config.Bind<float>("Camera Settings - Walk", "cameraWalkY", defaultPosition.y, "Camera Y position when walking.");
+            cameraWalkZ = Config.Bind<float>("Camera Settings - Walk", "cameraWalkZ", defaultPosition.z, "Camera Z position when walking.");
 
             // Boat
             cameraBoatFOV   = Config.Bind<float>("Camera Settings - Boat", "cameraBoatFOV", defaultFOV, "Camera fov when sailing.");

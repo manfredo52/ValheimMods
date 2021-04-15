@@ -91,6 +91,8 @@ namespace CustomizableCamera
                 return;
             }
 
+            characterWalking = __instance.GetWalk();
+
             if (run || autoRun || blockHold)
             {
                 isPlayerAbleToCrouch = false;
