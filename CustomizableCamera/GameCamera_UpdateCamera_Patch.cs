@@ -31,9 +31,17 @@ namespace CustomizableCamera
             }
         }
 
+        public static void checkInteriorChange(Player player)
+        {
+            if (playerInShelter != player.InShelter())
+            {
+                playerInShelter = player.InShelter();
+                canChangeCameraDistance = true;
+            }
+        }
+
         public static void moveToNewCameraDistance(float time, ref float ___m_distance)
         {
-            // TODO: Lerp TP Camera Position when player is going into FP
             // Removes the delay when the player is going into first person.
             if (___m_distance <= 0.1 && targetDistance == 0)        
                 ___m_distance = targetDistance;
@@ -53,7 +61,21 @@ namespace CustomizableCamera
             if (!localPlayer)
                 return;
 
+            checkInteriorChange(localPlayer);
             ___m_zoomSens = cameraZoomSensitivity.Value;
+
+            // Separate camera distances for different scenarios.
+            if (cameraSeparateEditsEnabled.Value && canChangeCameraDistance)
+            {
+                if (playerInShelter)
+                    targetDistance = cameraDistanceInteriors.Value;
+                else if (characterControlledShip)
+                    targetDistance = cameraDistanceBoat.Value;
+                else
+                    targetDistance = cameraDistance.Value;
+
+                canChangeCameraDistance = false;
+            }
 
             if (smoothZoomEnabled.Value)
             {
