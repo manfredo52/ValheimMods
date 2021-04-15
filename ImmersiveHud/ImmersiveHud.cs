@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.1")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.2")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -56,8 +56,14 @@ namespace ImmersiveHud
 
         // Compatibility Settings
         public static ConfigEntry<bool> quickSlotsEnabled;
+        public static ConfigEntry<bool> betterUIHPEnabled;
+        public static ConfigEntry<bool> betterUIFoodEnabled;
+        public static ConfigEntry<bool> betterUIStamEnabled;
 
         public static bool hasQuickSlotsEnabled;
+        public static bool hasBetterUIHPEnabled;
+        public static bool hasBetterUIFoodEnabled;
+        public static bool hasBetterUIStamEnabled;
 
         // Hud Element - All
         public static bool hudHidden;
@@ -117,7 +123,10 @@ namespace ImmersiveHud
             "HotKeyBar",
             "StatusEffects",
             "MiniMap",
-            "QuickSlotsHotkeyBar"
+            "QuickSlotsHotkeyBar",
+            "BetterUI_HPBar",
+            "BetterUI_FoodBar",
+            "BetterUI_StaminaBar"
         };
 
         public class HudElement
@@ -209,7 +218,10 @@ namespace ImmersiveHud
             showHudKey              = Config.Bind<KeyboardShortcut>("- Main Settings -", "showHudKey", new KeyboardShortcut(KeyCode.G), "Keyboard shortcut or mouse button to display the hud for a duration.");
 
             // Compatibility
-            quickSlotsEnabled   = Config.Bind<bool>("- Mod Compatibility -", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
+            quickSlotsEnabled       = Config.Bind<bool>("- Mod Compatibility -", "quickSlotsEnabled", false, "Enable compatibility for quickslots mod.");
+            betterUIHPEnabled       = Config.Bind<bool>("- Mod Compatibility -", "betterUIHPEnabled", false, "Enable compatibility for Better UI's custom HP bar.");
+            betterUIFoodEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIFoodEnabled", false, "Enable compatibility for Better UI's custom food bar.");
+            betterUIStamEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIStamEnabled", false, "Enable compatibility for Better UI's custom stamina bar.");
 
             // Crosshair Settings
             useCustomCrosshair              = Config.Bind<bool>("- Settings: Crosshair -", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));

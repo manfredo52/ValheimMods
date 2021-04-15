@@ -8,7 +8,7 @@ namespace ImmersiveHud
     {
         public static void setCompatibility(Transform hud)
         {
-            // Compatibility check for Quick Slots mod.
+            // Compatibility check for Quick Slots.
             if (quickSlotsEnabled.Value && hudElements["QuickSlotsHotkeyBar"].element == null)
             {
                 if (hud.Find("QuickSlotsHotkeyBar"))
@@ -20,6 +20,51 @@ namespace ImmersiveHud
                 else
                 {
                     hasQuickSlotsEnabled = false;
+                }
+            }
+
+            // Compatibility check for BetterUI HP Bar
+            if (betterUIHPEnabled.Value && hudElements["BetterUI_HPBar"].element == null)
+            {
+                if (hud.Find("BetterUI_HPBar"))
+                {
+                    hudElements["BetterUI_HPBar"].element = hud.Find("BetterUI_HPBar");
+                    hudElements["BetterUI_HPBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIHPEnabled = true;
+                }
+                else
+                {
+                    hasBetterUIHPEnabled = false;
+                }
+            }
+
+            // Compatibility check for BetterUI Food Bar
+            if (betterUIFoodEnabled.Value && hudElements["BetterUI_FoodBar"].element == null)
+            {
+                if (hud.Find("BetterUI_FoodBar"))
+                {
+                    hudElements["BetterUI_FoodBar"].element = hud.Find("BetterUI_FoodBar");
+                    hudElements["BetterUI_FoodBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIFoodEnabled = true;
+                }
+                else
+                {
+                    hasBetterUIFoodEnabled = false;
+                }
+            }
+
+            // Compatibility check for BetterUI Stam Bar
+            if (betterUIStamEnabled.Value && hudElements["BetterUI_StaminaBar"].element == null)
+            {
+                if (hud.Find("BetterUI_StaminaBar"))
+                {
+                    hudElements["BetterUI_StaminaBar"].element = hud.Find("BetterUI_StaminaBar");
+                    hudElements["BetterUI_StaminaBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIStamEnabled = true;
+                }
+                else
+                {
+                    hasBetterUIStamEnabled = false;
                 }
             }
         }
@@ -93,19 +138,43 @@ namespace ImmersiveHud
                 if (displayHealthAlways.Value || (displayHealthInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["healthpanel"].targetAlpha = 1;
+
+                    if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
+                        hudElements["BetterUI_HPBar"].targetAlpha = 1;
                 }
                 else
                 {
                     // Display when key pressed
                     if (pressedShowKey && showHealthOnKeyPressed.Value)
+                    {
                         hudElements["healthpanel"].showHudForDuration();
+
+                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
+                            hudElements["BetterUI_HPBar"].showHudForDuration();
+                    }
+                        
 
                     // Display health panel when below a given percentage.
                     if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
+                    {
                         hudElements["healthpanel"].hudSetTargetAlpha(1);
+
+                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
+                            hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
+                    }                
                     else
+                    {
                         hudElements["healthpanel"].hudSetTargetAlpha(0);
+
+                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
+                            hudElements["BetterUI_HPBar"].hudSetTargetAlpha(0);
+                    }
+                        
                 }
+
+                // Food Bar Display
+
+                // Stamina Bar Display
 
                 // Forsaken Power Display
                 if (displayForsakenPowerAlways.Value || (displayPowerInInventory.Value && InventoryGui.IsVisible()))
