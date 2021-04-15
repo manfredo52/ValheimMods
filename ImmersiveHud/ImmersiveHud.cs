@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.2")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.3")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -53,6 +53,7 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayStatusEffectsAlways;
         public static ConfigEntry<bool> displayMiniMapAlways;
         public static ConfigEntry<bool> displayQuickSlotsAlways;
+        public static ConfigEntry<bool> displayBetterUIFoodAlways;
 
         // Compatibility Settings
         public static ConfigEntry<bool> quickSlotsEnabled;
@@ -77,6 +78,12 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayHealthWhenBelowPercentage;
         public static ConfigEntry<float> healthPercentage;
         public static ConfigEntry<bool> showHealthOnKeyPressed;
+
+        // Hud Element - Food Bar (Better UI)
+        public static ConfigEntry<bool> displayFoodBarInInventory;
+        public static ConfigEntry<bool> showFoodBarOnKeyPressed;
+
+        // Hud Element - Stamina Bar
 
         // Hud Element - Forsaken Power
         public static ConfigEntry<bool> displayPowerInInventory;
@@ -242,6 +249,7 @@ namespace ImmersiveHud
             displayStatusEffectsAlways  = Config.Bind<bool>("- Settings: Display -", "displayStatusEffectsAlways", false, "Always display status effects.");
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
             displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
+            displayBetterUIFoodAlways   = Config.Bind<bool>("- Settings: Display -", "displayBetterUIFoodAlways", false, "Always display the food bar (Requires Better UI).");
 
             // Display Scenario Settings - Health          
             displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
@@ -251,6 +259,10 @@ namespace ImmersiveHud
             displayHealthWhenBelowPercentage    = Config.Bind<bool>("Display - Health", "displayWhenBelowPercentage", false, "When you are at or below a certain health percentage, display the health panel.");
             healthPercentage                    = Config.Bind<float>("Display - Health", "healthPercentage", 0.75f, new ConfigDescription("Health percentage at which the health panel should be displayed", new AcceptableValueRange<float>(0f, 1f)));
             showHealthOnKeyPressed              = Config.Bind<bool>("Display - Health", "showHealthOnKeyPressed", true, "Show the health panel when the show hud key is pressed.");
+
+            // Display Scenario Settings - Food Bar (Better UI)
+            displayFoodBarInInventory   = Config.Bind<bool>("Display - Food Bar (Better UI)", "displayBetterUIFoodBarInInventory", true, "Display the food bar when in the inventory.");
+            showFoodBarOnKeyPressed     = Config.Bind<bool>("Display - Food Bar (Better UI)", "showFoodBarOnKeyPressed", true, "Display the food bar when the show hud key is pressed.");
 
             // Display Scenario Settings - Forsaken Power           
             displayPowerInInventory         = Config.Bind<bool>("Display - Forsaken Power", "displayPowerInInventory", true, "Display the forsaken power when in the inventory.");

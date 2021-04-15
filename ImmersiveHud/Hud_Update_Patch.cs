@@ -173,6 +173,25 @@ namespace ImmersiveHud
                 }
 
                 // Food Bar Display
+                if (displayBetterUIFoodAlways.Value || (displayFoodBarInInventory.Value && InventoryGui.IsVisible()))
+                {
+                    if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+                        hudElements["BetterUI_FoodBar"].targetAlpha = 1;
+                }
+                else
+                {
+                    // Display when key pressed
+                    if (pressedShowKey && showFoodBarOnKeyPressed.Value)
+                    {
+                        if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+                            hudElements["BetterUI_FoodBar"].showHudForDuration();
+                    } 
+                    else
+                    {
+                        if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+                            hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
+                    }
+                }
 
                 // Stamina Bar Display
 
