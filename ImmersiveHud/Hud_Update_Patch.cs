@@ -6,69 +6,6 @@ namespace ImmersiveHud
     [HarmonyPatch(typeof(Hud), "Update")]
     public class Hud_Update_Patch : ImmersiveHud
     {
-        public static void setCompatibility(Transform hud)
-        {
-            // Compatibility check for Quick Slots.
-            if (quickSlotsEnabled.Value && hudElements["QuickSlotsHotkeyBar"].element == null)
-            {
-                if (hud.Find("QuickSlotsHotkeyBar"))
-                {
-                    hudElements["QuickSlotsHotkeyBar"].element = hud.Find("QuickSlotsHotkeyBar");
-                    hudElements["QuickSlotsHotkeyBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasQuickSlotsEnabled = true;
-                } 
-                else
-                {
-                    hasQuickSlotsEnabled = false;
-                }
-            }
-
-            // Compatibility check for BetterUI HP Bar
-            if (betterUIHPEnabled.Value && hudElements["BetterUI_HPBar"].element == null)
-            {
-                if (hud.Find("BetterUI_HPBar"))
-                {
-                    hudElements["BetterUI_HPBar"].element = hud.Find("BetterUI_HPBar");
-                    hudElements["BetterUI_HPBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIHPEnabled = true;
-                }
-                else
-                {
-                    hasBetterUIHPEnabled = false;
-                }
-            }
-
-            // Compatibility check for BetterUI Food Bar
-            if (betterUIFoodEnabled.Value && hudElements["BetterUI_FoodBar"].element == null)
-            {
-                if (hud.Find("BetterUI_FoodBar"))
-                {
-                    hudElements["BetterUI_FoodBar"].element = hud.Find("BetterUI_FoodBar");
-                    hudElements["BetterUI_FoodBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIFoodEnabled = true;
-                }
-                else
-                {
-                    hasBetterUIFoodEnabled = false;
-                }
-            }
-
-            // Compatibility check for BetterUI Stam Bar
-            if (betterUIStamEnabled.Value && hudElements["BetterUI_StaminaBar"].element == null)
-            {
-                if (hud.Find("BetterUI_StaminaBar"))
-                {
-                    hudElements["BetterUI_StaminaBar"].element = hud.Find("BetterUI_StaminaBar");
-                    hudElements["BetterUI_StaminaBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIStamEnabled = true;
-                }
-                else
-                {
-                    hasBetterUIStamEnabled = false;
-                }
-            }
-        }
-
         public static void updateHudElementTransparency(HudElement hudElement)
         {
             float lerpedAlpha;
@@ -197,8 +134,8 @@ namespace ImmersiveHud
                         // Display food bar when eating food
                         if (displayFoodBarWhenEating.Value && playerAteFood)
                             hudElements["BetterUI_FoodBar"].showHudForDuration();
-                        else
-                            hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
+
+                        hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
                     }
                 }
 
@@ -306,7 +243,7 @@ namespace ImmersiveHud
                     hudElements["StatusEffects"].hudSetTargetAlpha(0);
                 }
 
-                // MiniMap Display
+                // Mini Map Display
                 if (displayMiniMapAlways.Value || (displayMiniMapInInventory.Value && InventoryGui.IsVisible()) || !isMiniMapActive)
                 {
                     hudElements["MiniMap"].targetAlpha = 1;
@@ -318,6 +255,23 @@ namespace ImmersiveHud
                         hudElements["MiniMap"].showHudForDuration();
 
                     hudElements["MiniMap"].hudSetTargetAlpha(0);
+                }
+
+                // Compass Display
+                if (compassEnabled.Value && hasCompassEnabled)
+                {
+                    if (displayCompassAlways.Value || (displayCompassInInventory.Value && InventoryGui.IsVisible()))
+                    {
+                        hudElements["Compass"].targetAlpha = 1;
+                    }
+                    else
+                    {
+                        // Display when key pressed
+                        if (pressedShowKey && showCompassOnKeyPressed.Value)
+                            hudElements["Compass"].showHudForDuration();
+
+                        hudElements["Compass"].hudSetTargetAlpha(0);
+                    }
                 }
 
                 // QuickSlots Display

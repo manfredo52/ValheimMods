@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.5")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.6")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -55,17 +55,20 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayMiniMapAlways;
         public static ConfigEntry<bool> displayQuickSlotsAlways;
         public static ConfigEntry<bool> displayBetterUIFoodAlways;
+        public static ConfigEntry<bool> displayCompassAlways;
 
         // Compatibility Settings
         public static ConfigEntry<bool> quickSlotsEnabled;
         public static ConfigEntry<bool> betterUIHPEnabled;
         public static ConfigEntry<bool> betterUIFoodEnabled;
         public static ConfigEntry<bool> betterUIStamEnabled;
+        public static ConfigEntry<bool> compassEnabled;
 
         public static bool hasQuickSlotsEnabled;
         public static bool hasBetterUIHPEnabled;
         public static bool hasBetterUIFoodEnabled;
         public static bool hasBetterUIStamEnabled;
+        public static bool hasCompassEnabled;
 
         // Hud Element - All
         public static bool hudHidden;
@@ -74,7 +77,7 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayHealthInInventory;
         //public static ConfigEntry<bool> displayHealthDuringRegen;
         //public static ConfigEntry<bool> displayHealthWhenDamaged;
-        // public static ConfigEntry<bool> displayHealthWhenHungry; //"You could eat another bite"
+        //public static ConfigEntry<bool> displayHealthWhenHungry;
         public static ConfigEntry<bool> displayHealthWhenEating;
         public static ConfigEntry<bool> displayHealthWhenBelowPercentage;
         public static ConfigEntry<float> healthPercentage;
@@ -101,7 +104,7 @@ namespace ImmersiveHud
         public static ConfigEntry<float> powerTimeChangeInterval;
         public static ConfigEntry<bool> showPowerOnKeyPressed;
 
-        // Hud Element - HotKeyBar
+        // Hud Element - Hot Key Bar
         public static ConfigEntry<bool> displayHotKeyBarInInventory;
         public static ConfigEntry<bool> displayHotKeyBarOnItemSwitch;
         public static ConfigEntry<bool> showHotKeyBarOnKeyPressed;
@@ -110,12 +113,16 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayStatusEffectsInInventory;
         public static ConfigEntry<bool> showStatusEffectsOnKeyPressed;
 
-        // Hud Element - MiniMap      
+        // Hud Element - Mini Map      
         public static ConfigEntry<bool> displayMiniMapInInventory;
         public static ConfigEntry<bool> showMiniMapOnKeyPressed;
         public static bool isMiniMapActive;
 
-        // Hud Element - QuickSlots
+        // Hud Element - Compass
+        public static ConfigEntry<bool> displayCompassInInventory;
+        public static ConfigEntry<bool> showCompassOnKeyPressed;
+
+        // Hud Element - Quick Slots
         public static ConfigEntry<bool> displayQuickSlotsInInventory;
         //public static ConfigEntry<bool> displayQuickSlotsOnItemSwitch;
         public static ConfigEntry<bool> showQuickSlotsOnKeyPressed;
@@ -144,7 +151,8 @@ namespace ImmersiveHud
             "QuickSlotsHotkeyBar",
             "BetterUI_HPBar",
             "BetterUI_FoodBar",
-            "BetterUI_StaminaBar"
+            "BetterUI_StaminaBar",
+            "Compass"
         };
 
         public class HudElement
@@ -240,6 +248,7 @@ namespace ImmersiveHud
             betterUIHPEnabled       = Config.Bind<bool>("- Mod Compatibility -", "betterUIHPEnabled", false, "Enable compatibility for Better UI's custom HP bar.");
             betterUIFoodEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIFoodEnabled", false, "Enable compatibility for Better UI's custom food bar.");
             betterUIStamEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIStamEnabled", false, "Enable compatibility for Better UI's custom stamina bar.");
+            compassEnabled          = Config.Bind<bool>("- Mod Compatibility -", "compassEnabled", false, "Enable compatibility for aedenthorn's compass mod.");
 
             // Crosshair Settings
             useCustomCrosshair              = Config.Bind<bool>("- Settings: Crosshair -", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));
@@ -262,6 +271,7 @@ namespace ImmersiveHud
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
             displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
             displayBetterUIFoodAlways   = Config.Bind<bool>("- Settings: Display -", "displayBetterUIFoodAlways", false, "Always display the food bar (Requires Better UI).");
+            displayCompassAlways        = Config.Bind<bool>("- Settings: Display -", "displayCompassAlways", false, "Always display the compass (Required aedenthorns compass).");
 
             // Display Scenario Settings - Health          
             displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
@@ -305,10 +315,14 @@ namespace ImmersiveHud
             displayMiniMapInInventory   = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
             showMiniMapOnKeyPressed     = Config.Bind<bool>("Display - MiniMap", "showMiniMapOnKeyPressed", true, "Show the minimap when the show hud key is pressed.");
 
-            // Display Scenario Settings - Quick Slots     
-            displayQuickSlotsInInventory    = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsInInventory", true, "Display quick slots when in the inventory.");
+            // Display Scenario Settings - Compass
+            displayCompassInInventory   = Config.Bind<bool>("Display - Compass", "displayCompassInInventory", false, "Display the compass when in the inventory.");
+            showCompassOnKeyPressed     = Config.Bind<bool>("Display - Compass", "showCompassOnKeyPressed", false, "Show the compass when the show hud key is pressed.");
+
+            // Display Scenario Settings - Quick Slots
+            displayQuickSlotsInInventory    = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsInInventory", false, "Display quick slots when in the inventory.");
             //displayQuickSlotsOnItemSwitch = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsOnItemSwitch", false, "Display the quick slots when you press any key for your quick slot items.");
-            showQuickSlotsOnKeyPressed      = Config.Bind<bool>("Display - Quick Slots", "showQuickSlotsOnKeyPressed", true, "Show the quick slots when the show hud key is pressed.");
+            showQuickSlotsOnKeyPressed      = Config.Bind<bool>("Display - Quick Slots", "showQuickSlotsOnKeyPressed", false, "Show the quick slots when the show hud key is pressed.");
 
             // Crosshair Sprites
             crosshairSprite                 = LoadCrosshairTexture("ImmersiveHud/crosshair.png");
@@ -355,6 +369,64 @@ namespace ImmersiveHud
 
                 if (useCustomBowCrosshair.Value && crosshairBowSprite != null)
                     playerBowCrosshair.sprite = crosshairBowSprite;
+            }
+        }
+
+        public static void setCompatibility(Transform hud)
+        {
+            // Compatibility check for BetterUI HP Bar
+            if (betterUIHPEnabled.Value && !hasBetterUIHPEnabled)
+            {
+                if (hud.Find("BetterUI_HPBar"))
+                {
+                    hudElements["BetterUI_HPBar"].element = hud.Find("BetterUI_HPBar");
+                    hudElements["BetterUI_HPBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIHPEnabled = true;
+                }
+            }
+
+            // Compatibility check for BetterUI Food Bar
+            if (betterUIFoodEnabled.Value && !hasBetterUIFoodEnabled)
+            {
+                if (hud.Find("BetterUI_FoodBar"))
+                {
+                    hudElements["BetterUI_FoodBar"].element = hud.Find("BetterUI_FoodBar");
+                    hudElements["BetterUI_FoodBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIFoodEnabled = true;
+                }
+            }
+
+            // Compatibility check for BetterUI Stam Bar
+            if (betterUIStamEnabled.Value && !hasBetterUIStamEnabled)
+            {
+                if (hud.Find("BetterUI_StaminaBar"))
+                {
+                    hudElements["BetterUI_StaminaBar"].element = hud.Find("BetterUI_StaminaBar");
+                    hudElements["BetterUI_StaminaBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasBetterUIStamEnabled = true;
+                }
+            }
+
+            // Compatibility check for Compass
+            if (compassEnabled.Value && !hasCompassEnabled)
+            {
+                if (hud.Find("Compass"))
+                {
+                    hudElements["Compass"].element = hud.Find("Compass");
+                    hudElements["Compass"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasCompassEnabled = true;
+                }
+            }
+
+            // Compatibility check for Quick Slots.
+            if (quickSlotsEnabled.Value && !hasQuickSlotsEnabled)
+            {
+                if (hud.Find("QuickSlotsHotkeyBar"))
+                {
+                    hudElements["QuickSlotsHotkeyBar"].element = hud.Find("QuickSlotsHotkeyBar");
+                    hudElements["QuickSlotsHotkeyBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                    hasQuickSlotsEnabled = true;
+                }
             }
         }
     }
