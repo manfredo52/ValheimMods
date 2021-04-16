@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.6")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.7")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -30,6 +30,7 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> useCustomBowCrosshair;
         public static ConfigEntry<Color> crosshairColor;
         public static ConfigEntry<Color> crosshairBowDrawColor;
+        public static ConfigEntry<bool> disableStealthHud;
         public static ConfigEntry<bool> displayCrosshairAlways;
         public static ConfigEntry<bool> displayCrosshairWhenBuilding;
         public static ConfigEntry<bool> displayCrosshairOnActivation;
@@ -45,6 +46,10 @@ namespace ImmersiveHud
         public static Sprite crosshairBowSprite;
         public static Sprite crosshairSpriteOriginal;
         public static Sprite crosshairBowSpriteOriginal;
+
+        public static float targetStealthHudAlpha;
+        public static GuiBar playerStealthBar;
+        public static GameObject playerStealthIndicator;    
 
         // Hud Element Settings
         public static ConfigEntry<bool> displayHealthAlways;
@@ -255,6 +260,7 @@ namespace ImmersiveHud
             useCustomBowCrosshair           = Config.Bind<bool>("- Settings: Crosshair -", "useCustomBowCrosshair", false, new ConfigDescription("Enable or disable the new crosshair for the bow draw.", null, new ConfigurationManagerAttributes { Order = 2 }));
             crosshairColor                  = Config.Bind<Color>("- Settings: Crosshair -", "crosshairColor", Color.white, "Color and transparency of the crosshair.");
             crosshairBowDrawColor           = Config.Bind<Color>("- Settings: Crosshair -", "crosshairBowDrawColor", Color.yellow, "Color and transparency of the bow draw crosshair.");
+            disableStealthHud               = Config.Bind<bool>("- Settings: Crosshair -", "disableStealthHud", false, "Disable the stealth bar and indicator so it doesn't display.");
             displayCrosshairAlways          = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairAlways", true, "Always display the crosshair, overriding other display crosshair settings.");
             displayBowDrawCrosshair         = Config.Bind<bool>("- Settings: Crosshair -", "displayBowDrawCrosshair", true, "Display the bow draw crosshair.");
             displayCrosshairWhenBuilding    = Config.Bind<bool>("- Settings: Crosshair -", "displayCrosshairWhenBuilding", true, "Display the crosshair when you have the hammer equipped.");
@@ -265,7 +271,7 @@ namespace ImmersiveHud
             // Display Elements Settings
             displayHealthAlways         = Config.Bind<bool>("- Settings: Display -", "displayHealthAlways", false, "Always display the health panel.");
             displayHotKeyBarAlways      = Config.Bind<bool>("- Settings: Display -", "displayHotbarAlways", false, "Always display the hotbar.");
-            displayForsakenPowerAlways  = Config.Bind<bool>("- Settings: Display -", "displayForsakenPowerAlways", false, "Always display the forsaken power.");
+            displayForsakenPowerAlways  = Config.Bind<bool>("- Settings: Display -", "displayForsakenPowerAlways", false, "Always display the forsaken power.");   
             displayStatusEffectsAlways  = Config.Bind<bool>("- Settings: Display -", "displayStatusEffectsAlways", false, "Always display status effects.");
             displayStaminaBarAlways     = Config.Bind<bool>("- Settings: Display -", "displayStaminaBarAlways", false, "Always display the stamina bar.");
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
@@ -333,6 +339,12 @@ namespace ImmersiveHud
 
         public static void DoPatching() => new Harmony("ImmersiveHud").PatchAll();
 
+        public static void DebugListOfHudElements(Transform hud)
+        {
+            foreach (Transform t in hud.GetComponentsInChildren<Transform>(true))
+                Debug.Log(t.name);
+        }
+
         [HarmonyPatch(typeof(Hud), "Awake")]
         public class Hud_Awake_Patch
         {
@@ -351,15 +363,21 @@ namespace ImmersiveHud
 
                     if (hudRoot.Find(name) == null)
                         continue;
-   
+
                     hudElements[name].element = hudRoot.Find(name);
                     hudElements[name].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                }  
+                }
 
                 hudHidden = hudHiddenOnStart.Value;
 
                 playerCrosshair = __instance.m_crosshair;
                 playerBowCrosshair = __instance.m_crosshairBow;
+
+                playerStealthBar = __instance.m_stealthBar;
+                playerStealthIndicator = __instance.m_hidden;
+
+                playerStealthBar.transform.gameObject.AddComponent<CanvasGroup>();
+                playerStealthIndicator.transform.gameObject.AddComponent<CanvasGroup>();
 
                 crosshairSpriteOriginal = playerCrosshair.sprite;
                 crosshairBowSpriteOriginal = playerBowCrosshair.sprite;
