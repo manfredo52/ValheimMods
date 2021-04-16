@@ -55,6 +55,7 @@
     <Reference Include="UnityEngine">
       <HintPath>D:\Games\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\SteamLibrary\steamapps\common\Valheim\unstripped_corlib\UnityEngine.CoreModule.dll</HintPath>
@@ -82,8 +83,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Player_UseStamina_Patch.cs" />
-    <Compile Include="Player_UseHotbarItem_Patch.cs" />
     <Compile Include="Player_Update_Patch.cs" />
     <Compile Include="Hud_UpdateCrosshair_Patch.cs" />
     <Compile Include="ConfigurationManagerAttributes.cs" />

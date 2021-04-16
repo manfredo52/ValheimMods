@@ -83,7 +83,7 @@ namespace ImmersiveHud
             hudElement.element.GetComponent<CanvasGroup>().alpha = lerpedAlpha;
         }
 
-        public static void getPlayerData(Transform hud)
+        public static void getPlayerData(Transform hud, Player player)
         {
             Minimap playerMap = hud.Find("MiniMap").GetComponent<Minimap>();
             bool prevState = isMiniMapActive;
@@ -152,7 +152,15 @@ namespace ImmersiveHud
                         if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
                             hudElements["BetterUI_HPBar"].showHudForDuration();
                     }
-                        
+
+                    // Display health panel when eating food
+                    if (displayHealthWhenEating.Value && playerAteFood)
+                    {
+                        hudElements["healthpanel"].showHudForDuration();
+
+                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
+                            hudElements["BetterUI_HPBar"].showHudForDuration();
+                    }
 
                     // Display health panel when below a given percentage.
                     if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
@@ -180,15 +188,16 @@ namespace ImmersiveHud
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showFoodBarOnKeyPressed.Value)
+                    if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
                     {
-                        if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+                        // Display when key pressed
+                        if (pressedShowKey && showFoodBarOnKeyPressed.Value)
                             hudElements["BetterUI_FoodBar"].showHudForDuration();
-                    } 
-                    else
-                    {
-                        if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+
+                        // Display food bar when eating food
+                        if (displayFoodBarWhenEating.Value && playerAteFood)
+                            hudElements["BetterUI_FoodBar"].showHudForDuration();
+                        else
                             hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
                     }
                 }
@@ -219,11 +228,18 @@ namespace ImmersiveHud
 
                         if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
                             hudElements["BetterUI_StaminaBar"].showHudForDuration();
-
-                        playerUsedStamina = false;
                     }
 
-                    // Display health panel when below a given percentage.
+                    // Display stamina bar when eating food
+                    if (displayStaminaBarWhenEating.Value && playerAteFood)
+                    {
+                        hudElements["staminapanel"].showHudForDuration();
+
+                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
+                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
+                    }
+
+                    // Display stamina bar when below a given percentage.
                     if (displayStaminaBarWhenBelowPercentage.Value && localPlayer.GetStaminaPercentage() <= staminaPercentage.Value)
                     {
                         hudElements["staminapanel"].hudSetTargetAlpha(1);
@@ -258,7 +274,7 @@ namespace ImmersiveHud
                     hudElements["GuardianPower"].hudSetTargetAlpha(0);
                 }
 
-                // HotKeyBar Display
+                // Hot Key Bar Display
                 if (displayHotKeyBarAlways.Value || (displayHotKeyBarInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["HotKeyBar"].targetAlpha = 1;
@@ -271,10 +287,7 @@ namespace ImmersiveHud
 
                     // Display on item switch/use
                     if (displayHotKeyBarOnItemSwitch.Value && playerUsedHotBarItem)
-                    {
                         hudElements["HotKeyBar"].showHudForDuration();
-                        playerUsedHotBarItem = false;
-                    }
 
                     hudElements["HotKeyBar"].hudSetTargetAlpha(0);
                 }
@@ -336,6 +349,10 @@ namespace ImmersiveHud
                 if (hudElements[name].targetAlphaPrev != hudElements[name].targetAlpha)
                     hudElements[name].timeFade = 0;               
             }
+
+            playerUsedHotBarItem = false;
+            playerUsedStamina = false;
+            playerAteFood = false;
         }
 
         private static void Postfix(Hud __instance)
@@ -347,11 +364,19 @@ namespace ImmersiveHud
 
             Transform hudRoot = __instance.transform.Find("hudroot");
 
-            getPlayerData(hudRoot);
+            // Set vanilla stamina bar to always be active so hiding and showing works properly.
+            // FIX: vanilla stam bar when eating food.
+            if (!hasBetterUIStamEnabled)
+            {
+                hudElements["staminapanel"].element.gameObject.SetActive(true);
+                __instance.m_staminaAnimator.SetBool("Visible", true);
+            }
+                
+            getPlayerData(hudRoot, localPlayer);
             setCompatibility(hudRoot);
             setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey), Input.GetKey(showHudKey.Value.MainKey));
 
-            foreach (string name in hudElementNames) 
+            foreach (string name in hudElementNames)
             {
                 if (hudElements[name].element == null)
                     continue;
@@ -362,7 +387,7 @@ namespace ImmersiveHud
                 {
                     hudElements[name].timeFade += Time.deltaTime;
                     updateHudElementTransparency(hudElements[name]);
-                } 
+                }
                 else
                 {
                     hudElements[name].timeDisplay += Time.deltaTime;
