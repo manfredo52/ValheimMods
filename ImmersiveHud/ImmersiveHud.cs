@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.7")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.8")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -387,6 +387,8 @@ namespace ImmersiveHud
 
                 if (useCustomBowCrosshair.Value && crosshairBowSprite != null)
                     playerBowCrosshair.sprite = crosshairBowSprite;
+
+                setCompatibility(hudRoot);
             }
         }
 

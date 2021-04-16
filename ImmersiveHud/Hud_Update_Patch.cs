@@ -318,6 +318,10 @@ namespace ImmersiveHud
 
             Transform hudRoot = __instance.transform.Find("hudroot");
 
+            getPlayerData(hudRoot, localPlayer);
+            setCompatibility(hudRoot);
+            setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey), Input.GetKey(showHudKey.Value.MainKey));
+
             // Set vanilla stamina bar to always be active so hiding and showing works properly.
             // FIX: vanilla stam bar when eating food.
             if (!hasBetterUIStamEnabled)
@@ -325,10 +329,6 @@ namespace ImmersiveHud
                 hudElements["staminapanel"].element.gameObject.SetActive(true);
                 __instance.m_staminaAnimator.SetBool("Visible", true);
             }
-                
-            getPlayerData(hudRoot, localPlayer);
-            setCompatibility(hudRoot);
-            setValuesBasedOnHud(Input.GetKeyDown(hideHudKey.Value.MainKey), Input.GetKey(showHudKey.Value.MainKey));
 
             foreach (string name in hudElementNames)
             {
