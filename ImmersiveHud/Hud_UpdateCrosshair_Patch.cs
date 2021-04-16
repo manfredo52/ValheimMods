@@ -6,7 +6,6 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    // Use updateCrosshair function?
     [HarmonyPatch(typeof(Hud), "UpdateCrosshair")]
     public class Hud_UpdateCrosshair_Patch : ImmersiveHud
     {
@@ -29,7 +28,13 @@ namespace ImmersiveHud
             }
         }
 
-        public static void setValuesBasedOnHud(Player player)
+        public static void updateStealthHudElement()
+        {
+            playerStealthBar.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
+            playerStealthIndicator.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
+        }
+
+        public static void setCrosshairValues(Player player)
         {
             GameObject hoverObject = player.GetHoverObject();
             Hoverable hoverable = hoverObject ? hoverObject.GetComponentInParent<Hoverable>() : null;
@@ -52,13 +57,21 @@ namespace ImmersiveHud
                 targetCrosshairAlpha = 0;
         }
 
-        private static void Postfix(Hud __instance, Player player, float bowDrawPercentage)
+        public static void setStealthHudValues()
         {
-            playerCrosshair = __instance.m_crosshair;
-            playerBowCrosshair = __instance.m_crosshairBow;
+            if (disableStealthHud.Value || hudHidden)
+                targetStealthHudAlpha = 0;
+            else
+                targetStealthHudAlpha = crosshairColor.Value.a;
+        }
 
-            setValuesBasedOnHud(player);
+        private static void Postfix(Player player, float bowDrawPercentage)
+        {
+            setCrosshairValues(player);
+            setStealthHudValues();
+
             updateCrosshairHudElement(bowDrawPercentage);
+            updateStealthHudElement();
         }
     }
 }
