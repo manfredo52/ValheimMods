@@ -32,6 +32,8 @@ namespace ImmersiveHud
         {
             playerStealthBar.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
             playerStealthIndicator.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
+            playerStealthIndicatorTargeted.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
+            playerStealthIndicatorAlert.GetComponent<CanvasGroup>().alpha = targetStealthHudAlpha;
         }
 
         public static void setCrosshairValues(Player player)

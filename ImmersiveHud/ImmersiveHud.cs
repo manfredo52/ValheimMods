@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.8")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.9")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -49,7 +49,9 @@ namespace ImmersiveHud
 
         public static float targetStealthHudAlpha;
         public static GuiBar playerStealthBar;
-        public static GameObject playerStealthIndicator;    
+        public static GameObject playerStealthIndicator;
+        public static GameObject playerStealthIndicatorTargeted;
+        public static GameObject playerStealthIndicatorAlert;
 
         // Hud Element Settings
         public static ConfigEntry<bool> displayHealthAlways;
@@ -375,9 +377,13 @@ namespace ImmersiveHud
 
                 playerStealthBar = __instance.m_stealthBar;
                 playerStealthIndicator = __instance.m_hidden;
+                playerStealthIndicatorTargeted = __instance.m_targeted;
+                playerStealthIndicatorAlert = __instance.m_targetedAlert;
 
                 playerStealthBar.transform.gameObject.AddComponent<CanvasGroup>();
                 playerStealthIndicator.transform.gameObject.AddComponent<CanvasGroup>();
+                playerStealthIndicatorTargeted.transform.gameObject.AddComponent<CanvasGroup>();
+                playerStealthIndicatorAlert.transform.gameObject.AddComponent<CanvasGroup>();
 
                 crosshairSpriteOriginal = playerCrosshair.sprite;
                 crosshairBowSpriteOriginal = playerBowCrosshair.sprite;
@@ -388,8 +394,18 @@ namespace ImmersiveHud
                 if (useCustomBowCrosshair.Value && crosshairBowSprite != null)
                     playerBowCrosshair.sprite = crosshairBowSprite;
 
+                setCompatibilityInit();
                 setCompatibility(hudRoot);
             }
+        }
+
+        public static void setCompatibilityInit()
+        {
+            hasBetterUIHPEnabled = false;
+            hasBetterUIFoodEnabled = false;
+            hasBetterUIStamEnabled = false;
+            hasCompassEnabled = false;
+            hasQuickSlotsEnabled = false;
         }
 
         public static void setCompatibility(Transform hud)
