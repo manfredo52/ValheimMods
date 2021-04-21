@@ -69,68 +69,98 @@ namespace ImmersiveHud
                 else
                     hudElements["MiniMap"].targetAlpha = 1;
             }
+            else if (pressedShowKey)
+            {
+                // Health
+                if (showHealthOnKeyPressed.Value)
+                {
+                    hudElements["healthpanel"].showHudForDuration();
+                    hudElements["BetterUI_HPBar"].showHudForDuration();
+                }
+
+                // Food Bar
+                if (showFoodBarOnKeyPressed.Value)
+                    hudElements["BetterUI_FoodBar"].showHudForDuration();
+
+                // Stamina
+                if (showStaminaBarOnKeyPressed.Value)
+                {
+                    hudElements["staminapanel"].showHudForDuration();
+                    hudElements["BetterUI_StaminaBar"].showHudForDuration();
+                }
+
+                // Forsaken Power
+                if (showPowerOnKeyPressed.Value)
+                    hudElements["GuardianPower"].showHudForDuration();
+
+                // Hot Key Bar
+                if (showHotKeyBarOnKeyPressed.Value)
+                    hudElements["HotKeyBar"].showHudForDuration();
+
+                // Status Effects
+                if (showStatusEffectsOnKeyPressed.Value)
+                    hudElements["StatusEffects"].showHudForDuration();
+
+                // Mini Map
+                if (showMiniMapOnKeyPressed.Value)
+                    hudElements["MiniMap"].showHudForDuration();
+
+                // Compass
+                if (showCompassOnKeyPressed.Value)
+                    hudElements["Compass"].showHudForDuration();
+
+                // Quick Slots
+                if (showQuickSlotsOnKeyPressed.Value)
+                    hudElements["QuickSlotsHotkeyBar"].showHudForDuration();
+            }
             else
             {
                 // Health Display
                 if (displayHealthAlways.Value || (displayHealthInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["healthpanel"].targetAlpha = 1;
-
-                    if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
-                        hudElements["BetterUI_HPBar"].targetAlpha = 1;
+                    hudElements["BetterUI_HPBar"].targetAlpha = 1;
+                        
+                    if (!displayHealthInInventory.Value && InventoryGui.IsVisible())
+                    {
+                        hudElements["healthpanel"].hudSetTargetAlpha(0);
+                        hudElements["BetterUI_HPBar"].hudSetTargetAlpha(0);
+                    }                 
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showHealthOnKeyPressed.Value)
-                    {
-                        hudElements["healthpanel"].showHudForDuration();
-
-                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
-                            hudElements["BetterUI_HPBar"].showHudForDuration();
-                    }
-
                     // Display health panel when eating food
                     if (displayHealthWhenEating.Value && playerAteFood)
                     {
                         hudElements["healthpanel"].showHudForDuration();
-
-                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
-                            hudElements["BetterUI_HPBar"].showHudForDuration();
+                        hudElements["BetterUI_HPBar"].showHudForDuration();
                     }
 
                     // Display health panel when below a given percentage.
                     if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
                     {
                         hudElements["healthpanel"].hudSetTargetAlpha(1);
-
-                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
-                            hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
                     }                
                     else
                     {
                         hudElements["healthpanel"].hudSetTargetAlpha(0);
-
-                        if (betterUIHPEnabled.Value && hasBetterUIHPEnabled)
-                            hudElements["BetterUI_HPBar"].hudSetTargetAlpha(0);
-                    }
-                        
+                        hudElements["BetterUI_HPBar"].hudSetTargetAlpha(0);
+                    }                        
                 }
 
                 // Food Bar Display
                 if (displayBetterUIFoodAlways.Value || (displayFoodBarInInventory.Value && InventoryGui.IsVisible()))
                 {
-                    if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
-                        hudElements["BetterUI_FoodBar"].targetAlpha = 1;
+                    hudElements["BetterUI_FoodBar"].targetAlpha = 1;
+
+                    if (!displayFoodBarInInventory.Value && InventoryGui.IsVisible())
+                        hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
                 }
                 else
                 {
-                    if (betterUIFoodEnabled.Value && hasBetterUIFoodEnabled)
+                    if (betterUIFoodEnabled.Value && hudElements["BetterUI_FoodBar"].doesExist)
                     {
-                        // Display when key pressed
-                        if (pressedShowKey && showFoodBarOnKeyPressed.Value)
-                            hudElements["BetterUI_FoodBar"].showHudForDuration();
-
                         // Display food bar when eating food
                         if (displayFoodBarWhenEating.Value && playerAteFood)
                             hudElements["BetterUI_FoodBar"].showHudForDuration();
@@ -143,53 +173,40 @@ namespace ImmersiveHud
                 if (displayStaminaBarAlways.Value || (displayStaminaBarInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["staminapanel"].targetAlpha = 1;
+                    hudElements["BetterUI_StaminaBar"].targetAlpha = 1;
 
-                    if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                        hudElements["BetterUI_StaminaBar"].targetAlpha = 1;
+                    if (!displayStaminaBarInInventory.Value && InventoryGui.IsVisible())
+                    { 
+                        hudElements["staminapanel"].hudSetTargetAlpha(0);
+                        hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(0);
+                    }
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showStaminaBarOnKeyPressed.Value)
-                    {
-                        hudElements["staminapanel"].showHudForDuration();
-
-                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
-                    }
-
                     // Display stamina bar when stamina is used
                     if (displayStaminaBarOnUse.Value && playerUsedStamina)
                     {
                         hudElements["staminapanel"].showHudForDuration();
-
-                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
+                        hudElements["BetterUI_StaminaBar"].showHudForDuration();
                     }
 
                     // Display stamina bar when eating food
                     if (displayStaminaBarWhenEating.Value && playerAteFood)
                     {
                         hudElements["staminapanel"].showHudForDuration();
-
-                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                            hudElements["BetterUI_StaminaBar"].showHudForDuration();
+                        hudElements["BetterUI_StaminaBar"].showHudForDuration();
                     }
 
                     // Display stamina bar when below a given percentage.
                     if (displayStaminaBarWhenBelowPercentage.Value && localPlayer.GetStaminaPercentage() <= staminaPercentage.Value)
                     {
                         hudElements["staminapanel"].hudSetTargetAlpha(1);
-
-                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                            hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
                     }
                     else
                     {
                         hudElements["staminapanel"].hudSetTargetAlpha(0);
-
-                        if (betterUIStamEnabled.Value && hasBetterUIStamEnabled)
-                            hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(0);
+                        hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(0);
                     }
                 }
 
@@ -197,13 +214,12 @@ namespace ImmersiveHud
                 if (displayForsakenPowerAlways.Value || (displayPowerInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["GuardianPower"].targetAlpha = 1;
+
+                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                        hudElements["GuardianPower"].hudSetTargetAlpha(0);
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showPowerOnKeyPressed.Value)
-                        hudElements["GuardianPower"].showHudForDuration();
-
                     // Show the forsaken power for a duration when the key is pressed.
                     if (displayPowerOnActivation.Value && (ZInput.GetButtonDown("GPower") || ZInput.GetButtonDown("JoyGPower")))
                         hudElements["GuardianPower"].showHudForDuration();
@@ -215,13 +231,12 @@ namespace ImmersiveHud
                 if (displayHotKeyBarAlways.Value || (displayHotKeyBarInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["HotKeyBar"].targetAlpha = 1;
+
+                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                        hudElements["HotKeyBar"].hudSetTargetAlpha(0);
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showHotKeyBarOnKeyPressed.Value)
-                        hudElements["HotKeyBar"].showHudForDuration();
-
                     // Display on item switch/use
                     if (displayHotKeyBarOnItemSwitch.Value && playerUsedHotBarItem)
                         hudElements["HotKeyBar"].showHudForDuration();
@@ -233,13 +248,12 @@ namespace ImmersiveHud
                 if (displayStatusEffectsAlways.Value || (displayStatusEffectsInInventory.Value && InventoryGui.IsVisible()))
                 {
                     hudElements["StatusEffects"].targetAlpha = 1;
+
+                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                        hudElements["StatusEffects"].hudSetTargetAlpha(0);
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showStatusEffectsOnKeyPressed.Value)
-                        hudElements["StatusEffects"].showHudForDuration();
-
                     hudElements["StatusEffects"].hudSetTargetAlpha(0);
                 }
 
@@ -247,46 +261,43 @@ namespace ImmersiveHud
                 if (displayMiniMapAlways.Value || (displayMiniMapInInventory.Value && InventoryGui.IsVisible()) || !isMiniMapActive)
                 {
                     hudElements["MiniMap"].targetAlpha = 1;
+
+                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                        hudElements["MiniMap"].hudSetTargetAlpha(0);
                 }
                 else
                 {
-                    // Display when key pressed
-                    if (pressedShowKey && showMiniMapOnKeyPressed.Value)
-                        hudElements["MiniMap"].showHudForDuration();
-
                     hudElements["MiniMap"].hudSetTargetAlpha(0);
                 }
 
                 // Compass Display
-                if (compassEnabled.Value && hasCompassEnabled)
+                if (compassEnabled.Value && hudElements["Compass"].doesExist)
                 {
                     if (displayCompassAlways.Value || (displayCompassInInventory.Value && InventoryGui.IsVisible()))
                     {
                         hudElements["Compass"].targetAlpha = 1;
+
+                        if (!displayCompassInInventory.Value && InventoryGui.IsVisible())
+                            hudElements["Compass"].hudSetTargetAlpha(0);
                     }
                     else
                     {
-                        // Display when key pressed
-                        if (pressedShowKey && showCompassOnKeyPressed.Value)
-                            hudElements["Compass"].showHudForDuration();
-
                         hudElements["Compass"].hudSetTargetAlpha(0);
                     }
                 }
 
                 // QuickSlots Display
-                if (quickSlotsEnabled.Value && hasQuickSlotsEnabled)
+                if (quickSlotsEnabled.Value && hudElements["QuickSlotsHotkeyBar"].doesExist)
                 {
                     if (displayQuickSlotsAlways.Value || (displayQuickSlotsInInventory.Value && InventoryGui.IsVisible()))
                     {
                         hudElements["QuickSlotsHotkeyBar"].targetAlpha = 1;
+
+                        if (!displayQuickSlotsInInventory.Value && InventoryGui.IsVisible())
+                            hudElements["QuickSlotsHotkeyBar"].hudSetTargetAlpha(0);
                     }
                     else
                     {
-                        // Display when key pressed
-                        if (pressedShowKey && showQuickSlotsOnKeyPressed.Value)
-                            hudElements["QuickSlotsHotkeyBar"].showHudForDuration();
-
                         hudElements["QuickSlotsHotkeyBar"].hudSetTargetAlpha(0);
                     }
                 }
@@ -297,7 +308,7 @@ namespace ImmersiveHud
             {
                 hudElements[name].hudCheckDisplayTimer();
 
-                if (hudElements[name].element == null)
+                if (!hudElements[name].doesExist || hudElements[name].element == null)
                     continue;
 
                 if (hudElements[name].targetAlphaPrev != hudElements[name].targetAlpha)
@@ -324,7 +335,7 @@ namespace ImmersiveHud
 
             // Set vanilla stamina bar to always be active so hiding and showing works properly.
             // FIX: vanilla stam bar when eating food.
-            if (!hasBetterUIStamEnabled)
+            if (!hudElements["BetterUI_StaminaBar"].doesExist)
             {
                 hudElements["staminapanel"].element.gameObject.SetActive(true);
                 __instance.m_staminaAnimator.SetBool("Visible", true);
@@ -332,7 +343,7 @@ namespace ImmersiveHud
 
             foreach (string name in hudElementNames)
             {
-                if (hudElements[name].element == null)
+                if (!hudElements[name].doesExist || hudElements[name].element == null)
                     continue;
 
                 hudElements[name].hudCheckLerpDuration();

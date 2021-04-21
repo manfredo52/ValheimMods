@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.1.9")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.0")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -70,12 +70,6 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> betterUIFoodEnabled;
         public static ConfigEntry<bool> betterUIStamEnabled;
         public static ConfigEntry<bool> compassEnabled;
-
-        public static bool hasQuickSlotsEnabled;
-        public static bool hasBetterUIHPEnabled;
-        public static bool hasBetterUIFoodEnabled;
-        public static bool hasBetterUIStamEnabled;
-        public static bool hasCompassEnabled;
 
         // Hud Element - All
         public static bool hudHidden;
@@ -166,18 +160,30 @@ namespace ImmersiveHud
         {
             public Transform element;
             public string elementName;
-            public bool targetAlphaReached;
+            
             public float targetAlphaPrev;
             public float targetAlpha;
             public float lastSetAlpha;
             public float timeFade = 0;
             public float timeDisplay = 0;
+
+            public bool targetAlphaReached;
             public bool isDisplaying;
+            public bool doesExist;
 
             public HudElement(string name)
             {
                 element = null;
                 elementName = name;
+            }
+
+            public void setElement(Transform e)
+            {
+                if (e != null)
+                {
+                    element = e;
+                    doesExist = true;
+                }
             }
 
             public void hudSetTargetAlpha(float alpha)
@@ -205,6 +211,9 @@ namespace ImmersiveHud
 
             public void showHudForDuration()
             {
+                if (!doesExist)
+                    return;
+
                 targetAlpha = 1;
                 timeDisplay = 0;
                 isDisplaying = true;
@@ -366,7 +375,7 @@ namespace ImmersiveHud
                     if (hudRoot.Find(name) == null)
                         continue;
 
-                    hudElements[name].element = hudRoot.Find(name);
+                    hudElements[name].setElement(hudRoot.Find(name));
                     hudElements[name].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
                 }
 
@@ -401,67 +410,62 @@ namespace ImmersiveHud
 
         public static void setCompatibilityInit()
         {
-            hasBetterUIHPEnabled = false;
-            hasBetterUIFoodEnabled = false;
-            hasBetterUIStamEnabled = false;
-            hasCompassEnabled = false;
-            hasQuickSlotsEnabled = false;
+            hudElements["BetterUI_HPBar"].doesExist = false;
+            hudElements["BetterUI_FoodBar"].doesExist = false;
+            hudElements["BetterUI_StaminaBar"].doesExist = false;
+            hudElements["Compass"].doesExist = false;
+            hudElements["QuickSlotsHotkeyBar"].doesExist = false;
         }
 
         public static void setCompatibility(Transform hud)
         {
             // Compatibility check for BetterUI HP Bar
-            if (betterUIHPEnabled.Value && !hasBetterUIHPEnabled)
+            if (betterUIHPEnabled.Value && !hudElements["BetterUI_HPBar"].doesExist)
             {
                 if (hud.Find("BetterUI_HPBar"))
                 {
-                    hudElements["BetterUI_HPBar"].element = hud.Find("BetterUI_HPBar");
+                    hudElements["BetterUI_HPBar"].setElement(hud.Find("BetterUI_HPBar"));
                     hudElements["BetterUI_HPBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIHPEnabled = true;
                 }
             }
 
             // Compatibility check for BetterUI Food Bar
-            if (betterUIFoodEnabled.Value && !hasBetterUIFoodEnabled)
+            if (betterUIFoodEnabled.Value && !hudElements["BetterUI_FoodBar"].doesExist)
             {
                 if (hud.Find("BetterUI_FoodBar"))
                 {
-                    hudElements["BetterUI_FoodBar"].element = hud.Find("BetterUI_FoodBar");
+                    hudElements["BetterUI_FoodBar"].setElement(hud.Find("BetterUI_FoodBar"));
                     hudElements["BetterUI_FoodBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIFoodEnabled = true;
                 }
             }
 
             // Compatibility check for BetterUI Stam Bar
-            if (betterUIStamEnabled.Value && !hasBetterUIStamEnabled)
+            if (betterUIStamEnabled.Value && !hudElements["BetterUI_StaminaBar"].doesExist)
             {
                 if (hud.Find("BetterUI_StaminaBar"))
                 {
-                    hudElements["BetterUI_StaminaBar"].element = hud.Find("BetterUI_StaminaBar");
+                    hudElements["BetterUI_StaminaBar"].setElement(hud.Find("BetterUI_StaminaBar"));
                     hudElements["BetterUI_StaminaBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasBetterUIStamEnabled = true;
                 }
             }
 
             // Compatibility check for Compass
-            if (compassEnabled.Value && !hasCompassEnabled)
+            if (compassEnabled.Value && !hudElements["Compass"].doesExist)
             {
                 if (hud.Find("Compass"))
                 {
-                    hudElements["Compass"].element = hud.Find("Compass");
+                    hudElements["Compass"].setElement(hud.Find("Compass"));
                     hudElements["Compass"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasCompassEnabled = true;
                 }
             }
 
             // Compatibility check for Quick Slots.
-            if (quickSlotsEnabled.Value && !hasQuickSlotsEnabled)
+            if (quickSlotsEnabled.Value && !hudElements["QuickSlotsHotkeyBar"].doesExist)
             {
                 if (hud.Find("QuickSlotsHotkeyBar"))
                 {
-                    hudElements["QuickSlotsHotkeyBar"].element = hud.Find("QuickSlotsHotkeyBar");
+                    hudElements["QuickSlotsHotkeyBar"].setElement(hud.Find("QuickSlotsHotkeyBar"));
                     hudElements["QuickSlotsHotkeyBar"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
-                    hasQuickSlotsEnabled = true;
                 }
             }
         }
