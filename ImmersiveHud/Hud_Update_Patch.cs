@@ -215,7 +215,7 @@ namespace ImmersiveHud
                 {
                     hudElements["GuardianPower"].targetAlpha = 1;
 
-                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                    if (!displayPowerInInventory.Value && InventoryGui.IsVisible())
                         hudElements["GuardianPower"].hudSetTargetAlpha(0);
                 }
                 else
@@ -232,7 +232,7 @@ namespace ImmersiveHud
                 {
                     hudElements["HotKeyBar"].targetAlpha = 1;
 
-                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                    if (!displayHotKeyBarInInventory.Value && InventoryGui.IsVisible())
                         hudElements["HotKeyBar"].hudSetTargetAlpha(0);
                 }
                 else
@@ -249,7 +249,7 @@ namespace ImmersiveHud
                 {
                     hudElements["StatusEffects"].targetAlpha = 1;
 
-                    if (!displayMiniMapInInventory.Value && InventoryGui.IsVisible())
+                    if (!displayStatusEffectsInInventory.Value && InventoryGui.IsVisible())
                         hudElements["StatusEffects"].hudSetTargetAlpha(0);
                 }
                 else
