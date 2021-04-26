@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.7")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.8")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -41,13 +41,13 @@ namespace CustomizableCamera
         public static Image playerCrosshair;
         public static Image playerBowCrosshair;
 
-        // Hud
+        // Sneak Hud
         public static GuiBar playerStealthBar;
-        public static GameObject playerHidden;
-
-        // Hud Positions
-        public static float playerInitialStealthbarX;
-        public static float playerInitialStealthbarY;
+        public static GameObject playerStealthIndicator;
+        public static GameObject playerStealthIndicatorTargeted;
+        public static GameObject playerStealthIndicatorAlert;
+        public static float playerInitialStealthBarX;
+        public static float playerInitialStealthBarY;
 
         // Bow Crosshair Settings
         public static ConfigEntry<bool> playerBowCrosshairEditsEnabled;
@@ -300,25 +300,28 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(Hud), "Awake")]
         public static class Hud_CrosshairAwake_Patch
         {
-            private static void Prefix(Hud __instance)
+            private static void Postfix(Hud __instance)
             {
                 playerCrosshair = __instance.m_crosshair;
                 playerBowCrosshair = __instance.m_crosshairBow;
                 playerStealthBar = __instance.m_stealthBar;
-                playerHidden = __instance.m_hidden;
+
+                playerStealthIndicator = __instance.m_hidden;
+                playerStealthIndicatorTargeted = __instance.m_targeted;
+                playerStealthIndicatorAlert = __instance.m_targetedAlert;
 
                 playerInitialCrosshairX = playerCrosshair.transform.position.x;
                 playerInitialCrosshairY = playerCrosshair.transform.position.y;
 
-                playerInitialStealthbarX = playerStealthBar.transform.position.x;
-                playerInitialStealthbarY = playerStealthBar.transform.position.y;
+                playerInitialStealthBarX = playerStealthBar.transform.position.x;
+                playerInitialStealthBarY = playerStealthBar.transform.position.y;
             }
         }
 
         [HarmonyPatch(typeof(PlayerController), "Awake")]
         public static class PlayerController_SetSensAwake_Patch
         {
-            private static void Prefix()
+            private static void Postfix()
             {           
                 playerMouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", PlayerController.m_mouseSens);
             }

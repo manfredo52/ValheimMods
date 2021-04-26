@@ -14,7 +14,8 @@ namespace CustomizableCamera
         public static float timePos = 0; 
 
         // Position Variables
-        public static Vector3 lastSetCrosshairPos;
+        public static Vector3 lastSetCrosshairPos = playerCrosshair.transform.position;
+        public static Vector3 lastSetStealthBarPos = playerStealthBar.transform.position;
         public static Vector3 targetCrosshairPos;
         public static Vector3 targetStealthBarPos;
 
@@ -37,12 +38,17 @@ namespace CustomizableCamera
 
         public static void moveToNewCrosshairPosition(float time)
         {
-            playerCrosshair.transform.position = Vector3.Lerp(playerCrosshair.transform.position, targetCrosshairPos, time);
-            playerBowCrosshair.transform.position = Vector3.Lerp(playerBowCrosshair.transform.position, targetCrosshairPos, time);  
-            playerHidden.transform.position = Vector3.Lerp(playerHidden.transform.position, targetCrosshairPos, time);
-            playerStealthBar.transform.position = Vector3.Lerp(playerStealthBar.transform.position, targetStealthBarPos, time);
+            playerCrosshair.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            playerBowCrosshair.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+
+            playerStealthIndicator.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            playerStealthIndicatorTargeted.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            playerStealthIndicatorAlert.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+
+            playerStealthBar.transform.position = Vector3.Lerp(lastSetStealthBarPos, targetStealthBarPos, time);
 
             lastSetCrosshairPos = playerCrosshair.transform.position;
+            lastSetStealthBarPos = playerStealthBar.transform.position;
         }
 
         public static void setTargetPositions()
@@ -50,12 +56,12 @@ namespace CustomizableCamera
             if (crosshairState == characterState.bowequipped)
             {
                 targetCrosshairPos = new Vector3(playerInitialCrosshairX + playerBowCrosshairX.Value, playerInitialCrosshairY + playerBowCrosshairY.Value, 0);
-                targetStealthBarPos = new Vector3(playerInitialStealthbarX + playerBowCrosshairX.Value, playerInitialStealthbarY + playerBowCrosshairY.Value * 3, 0);
+                targetStealthBarPos = new Vector3(playerInitialStealthBarX + playerBowCrosshairX.Value, playerInitialStealthBarY + playerBowCrosshairY.Value * 3, 0);
             }
             else
             {
                 targetCrosshairPos = new Vector3(playerInitialCrosshairX, playerInitialCrosshairY, 0);
-                targetStealthBarPos = new Vector3(playerInitialStealthbarX, playerInitialStealthbarY, 0);
+                targetStealthBarPos = new Vector3(playerInitialStealthBarX, playerInitialStealthBarY, 0);
             }
         }
 
