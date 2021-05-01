@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.1")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.2")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -63,13 +63,15 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayQuickSlotsAlways;
         public static ConfigEntry<bool> displayBetterUIFoodAlways;
         public static ConfigEntry<bool> displayCompassAlways;
+        public static ConfigEntry<bool> displayTimeAlways;
 
         // Compatibility Settings
         public static ConfigEntry<bool> quickSlotsEnabled;
         public static ConfigEntry<bool> betterUIHPEnabled;
         public static ConfigEntry<bool> betterUIFoodEnabled;
         public static ConfigEntry<bool> betterUIStamEnabled;
-        public static ConfigEntry<bool> compassEnabled;
+        public static ConfigEntry<bool> aedenCompassEnabled;
+        public static ConfigEntry<bool> oryxenTimeEnabled;
 
         // Hud Element - All
         public static bool hudHidden;
@@ -123,6 +125,10 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayCompassInInventory;
         public static ConfigEntry<bool> showCompassOnKeyPressed;
 
+        // Hud Element - Day and Time
+        public static ConfigEntry<bool> displayTimeInInventory;
+        public static ConfigEntry<bool> showTimeOnKeyPressed;
+
         // Hud Element - Quick Slots
         public static ConfigEntry<bool> displayQuickSlotsInInventory;
         //public static ConfigEntry<bool> displayQuickSlotsOnItemSwitch;
@@ -153,7 +159,8 @@ namespace ImmersiveHud
             "BetterUI_HPBar",
             "BetterUI_FoodBar",
             "BetterUI_StaminaBar",
-            "Compass"
+            "Compass",
+            "DayTimePanel"
         };
 
         public class HudElement
@@ -264,7 +271,8 @@ namespace ImmersiveHud
             betterUIHPEnabled       = Config.Bind<bool>("- Mod Compatibility -", "betterUIHPEnabled", false, "Enable compatibility for Better UI's custom HP bar.");
             betterUIFoodEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIFoodEnabled", false, "Enable compatibility for Better UI's custom food bar.");
             betterUIStamEnabled     = Config.Bind<bool>("- Mod Compatibility -", "betterUIStamEnabled", false, "Enable compatibility for Better UI's custom stamina bar.");
-            compassEnabled          = Config.Bind<bool>("- Mod Compatibility -", "compassEnabled", false, "Enable compatibility for aedenthorn's compass mod.");
+            aedenCompassEnabled     = Config.Bind<bool>("- Mod Compatibility -", "aedenCompassEnabled", false, "Enable compatibility for aedenthorn's compass mod.");
+            oryxenTimeEnabled       = Config.Bind<bool>("- Mod Compatibility -", "oryxenTimeEnabled", false, "Enable compatibility for oryxen's display day and time mod.");
 
             // Crosshair Settings
             useCustomCrosshair              = Config.Bind<bool>("- Settings: Crosshair -", "useCustomCrosshair", false, new ConfigDescription("Enable or disable the new crosshair.", null, new ConfigurationManagerAttributes { Order = 1 }));
@@ -288,7 +296,8 @@ namespace ImmersiveHud
             displayMiniMapAlways        = Config.Bind<bool>("- Settings: Display -", "displayMiniMapAlways", false, "Always display the minimap.");
             displayQuickSlotsAlways     = Config.Bind<bool>("- Settings: Display -", "displayQuickSlotsAlways", false, "Always display the quick slots (Requires quick slots mod).");
             displayBetterUIFoodAlways   = Config.Bind<bool>("- Settings: Display -", "displayBetterUIFoodAlways", false, "Always display the food bar (Requires Better UI).");
-            displayCompassAlways        = Config.Bind<bool>("- Settings: Display -", "displayCompassAlways", false, "Always display the compass (Required aedenthorns compass).");
+            displayCompassAlways        = Config.Bind<bool>("- Settings: Display -", "displayCompassAlways", false, "Always display the compass (Requires aedenthorn's compass).");
+            displayTimeAlways           = Config.Bind<bool>("- Settings: Display -", "displayTimeAlways", false, "Always display the time or clock (Requires oryxen's display day and time mod).");
 
             // Display Scenario Settings - Health          
             displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
@@ -335,6 +344,10 @@ namespace ImmersiveHud
             // Display Scenario Settings - Compass
             displayCompassInInventory   = Config.Bind<bool>("Display - Compass", "displayCompassInInventory", false, "Display the compass when in the inventory.");
             showCompassOnKeyPressed     = Config.Bind<bool>("Display - Compass", "showCompassOnKeyPressed", false, "Show the compass when the show hud key is pressed.");
+
+            // Display Scenario Settings - Clock and Day Time
+            displayTimeInInventory  = Config.Bind<bool>("Display - Day and Time", "displayTimeInInventory", false, "Display the time when in the inventory.");
+            showTimeOnKeyPressed    = Config.Bind<bool>("Display - Day and Time", "showTimeOnKeyPressed", false, "Show the time when the show hud key is pressed.");
 
             // Display Scenario Settings - Quick Slots
             displayQuickSlotsInInventory    = Config.Bind<bool>("Display - Quick Slots", "displayQuickSlotsInInventory", false, "Display quick slots when in the inventory.");
@@ -419,7 +432,7 @@ namespace ImmersiveHud
 
         public static void setCompatibility(Transform hud)
         {
-            // Compatibility check for BetterUI HP Bar
+            // Compatibility check for BetterUI HP Bar.
             if (betterUIHPEnabled.Value && !hudElements["BetterUI_HPBar"].doesExist)
             {
                 if (hud.Find("BetterUI_HPBar"))
@@ -429,7 +442,7 @@ namespace ImmersiveHud
                 }
             }
 
-            // Compatibility check for BetterUI Food Bar
+            // Compatibility check for BetterUI Food Bar.
             if (betterUIFoodEnabled.Value && !hudElements["BetterUI_FoodBar"].doesExist)
             {
                 if (hud.Find("BetterUI_FoodBar"))
@@ -439,7 +452,7 @@ namespace ImmersiveHud
                 }
             }
 
-            // Compatibility check for BetterUI Stam Bar
+            // Compatibility check for BetterUI Stam Bar.
             if (betterUIStamEnabled.Value && !hudElements["BetterUI_StaminaBar"].doesExist)
             {
                 if (hud.Find("BetterUI_StaminaBar"))
@@ -449,13 +462,23 @@ namespace ImmersiveHud
                 }
             }
 
-            // Compatibility check for Compass
-            if (compassEnabled.Value && !hudElements["Compass"].doesExist)
+            // Compatibility check for Compass.
+            if (aedenCompassEnabled.Value && !hudElements["Compass"].doesExist)
             {
                 if (hud.Find("Compass"))
                 {
                     hudElements["Compass"].setElement(hud.Find("Compass"));
                     hudElements["Compass"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+
+            // Compatibility check for Display Day and Time.
+            if (oryxenTimeEnabled.Value && !hudElements["DayTimePanel"].doesExist)
+            {
+                if (hud.Find("DayTimePanel"))
+                {
+                    hudElements["DayTimePanel"].setElement(hud.Find("DayTimePanel"));
+                    hudElements["DayTimePanel"].element.GetComponent<RectTransform>().gameObject.AddComponent<CanvasGroup>();
                 }
             }
 

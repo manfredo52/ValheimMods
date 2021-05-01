@@ -109,6 +109,10 @@ namespace ImmersiveHud
                 if (showCompassOnKeyPressed.Value)
                     hudElements["Compass"].showHudForDuration();
 
+                // Day and Time
+                if (showTimeOnKeyPressed.Value && oryxenTimeEnabled.Value)
+                    hudElements["DayTimePanel"].showHudForDuration();
+
                 // Quick Slots
                 if (showQuickSlotsOnKeyPressed.Value)
                     hudElements["QuickSlotsHotkeyBar"].showHudForDuration();
@@ -271,7 +275,7 @@ namespace ImmersiveHud
                 }
 
                 // Compass Display
-                if (compassEnabled.Value && hudElements["Compass"].doesExist)
+                if (aedenCompassEnabled.Value && hudElements["Compass"].doesExist)
                 {
                     if (displayCompassAlways.Value || (displayCompassInInventory.Value && InventoryGui.IsVisible()))
                     {
@@ -283,6 +287,22 @@ namespace ImmersiveHud
                     else
                     {
                         hudElements["Compass"].hudSetTargetAlpha(0);
+                    }
+                }
+
+                // Day and Time Display
+                if (oryxenTimeEnabled.Value && hudElements["DayTimePanel"].doesExist)
+                {
+                    if (displayTimeAlways.Value || (displayTimeInInventory.Value && InventoryGui.IsVisible()))
+                    {
+                        hudElements["DayTimePanel"].targetAlpha = 1;
+
+                        if (!displayTimeInInventory.Value && InventoryGui.IsVisible())
+                            hudElements["DayTimePanel"].hudSetTargetAlpha(0);
+                    }
+                    else
+                    {
+                        hudElements["DayTimePanel"].hudSetTargetAlpha(0);
                     }
                 }
 
