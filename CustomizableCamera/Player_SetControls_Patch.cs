@@ -26,27 +26,23 @@ namespace CustomizableCamera
                 // Check to make sure if the user is drawing their bow.
                 if (__instance.IsHoldingAttack() && characterEquippedBow)
                 {
-                    // Automatically zoom in on draw.
-                    if (bowZoomOnDraw.Value)
+                    // Cancel draw key, auto zoom, toggle zoom, or hold zoom
+                    if (Input.GetKey(bowCancelDrawKey.Value.MainKey))
                     {
-                        if (block || blockHold)
-                            characterAiming = false;
-                        else
-                            characterAiming = true;
+                        block = true;
+                        blockHold = true;
+                        characterAiming = false;
+                    }
+                    else if (bowZoomOnDraw.Value)
+                    {
+                        characterAiming = true;
                     }
                     else
                     {
                         block = false;
                         blockHold = false;
-
-                        // Cancel draw key, toggle zoom, or hold zoom
-                        if (Input.GetKey(bowCancelDrawKey.Value.MainKey))
-                        {
-                            characterAiming = false;
-                            block = true;
-                            blockHold = true;
-                        }
-                        else if (bowZoomKeyToggle.Value)
+                        
+                        if (bowZoomKeyToggle.Value)
                         {                       
                             if (Input.GetKeyDown(bowZoomKey.Value.MainKey))
                                 characterAiming = !characterAiming;
@@ -78,7 +74,8 @@ namespace CustomizableCamera
 
         private static void Postfix(Player __instance, Vector3 movedir, bool blockHold, bool crouch, bool run, bool autoRun)
         {
-            if (!__instance) return;
+            if (!__instance)
+                return;
 
             if (movedir.magnitude != 0)
                 playerIsMoving = true;
