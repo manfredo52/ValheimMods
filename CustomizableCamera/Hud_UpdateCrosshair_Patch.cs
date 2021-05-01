@@ -16,8 +16,8 @@ namespace CustomizableCamera
         // Position Variables
         public static Vector3 lastSetCrosshairPos = playerCrosshair.transform.position;
         public static Vector3 lastSetStealthBarPos = playerStealthBar.transform.position;
-        public static Vector3 targetCrosshairPos;
-        public static Vector3 targetStealthBarPos;
+        public static Vector3 targetCrosshairPos = playerCrosshair.transform.position;
+        public static Vector3 targetStealthBarPos = playerStealthBar.transform.position;
 
         public static bool crosshairStateChanged;
         public static characterState crosshairStatePrev = characterState.standing;
