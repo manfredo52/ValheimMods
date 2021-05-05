@@ -36,15 +36,20 @@ namespace ImmersiveHud
 
         public static void getPlayerTotalFoodValue(Player player)
         {
-            playerTotalFoodValue = playerCurrentFoodValue = 0;
+            playerTotalFoodValue = playerCurrentFoodValue = playerHungerCount = 0;
 
             foreach (Player.Food food in player.GetFoods())
             {
                 playerTotalFoodValue += food.m_item.m_shared.m_food;
                 playerCurrentFoodValue += food.m_health;
+
+                if (food.CanEatAgain())
+                    playerHungerCount++;
             }
 
             playerFoodPercentage = playerCurrentFoodValue / playerTotalFoodValue;
+
+            Debug.Log("Total: " + playerTotalFoodValue + "   Current: " + playerCurrentFoodValue + "   Percent: " + playerFoodPercentage + "   Hunger: " + playerHungerCount);
         }
 
         public static void setValuesBasedOnHud(bool pressedHideKey, bool pressedShowKey)
@@ -166,6 +171,11 @@ namespace ImmersiveHud
                         hudElements["healthpanel"].hudSetTargetAlpha(1);
                         hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
                     }
+                    else if (displayHealthWhenHungry.Value && playerHungerCount >= foodHungerAmount.Value)
+                    {
+                        hudElements["healthpanel"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
+                    }
                     else
                     {
                         hudElements["healthpanel"].hudSetTargetAlpha(0);
@@ -193,7 +203,11 @@ namespace ImmersiveHud
                         if (displayFoodBarWhenBelow.Value && playerFoodPercentage <= foodPercentage.Value)
                         {
                             hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(1);
-                        } 
+                        }
+                        else if (displayFoodBarWhenHungry.Value && playerHungerCount >= foodHungerAmount.Value)
+                        {
+                            hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(1);
+                        }
                         else
                         {
                             hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
@@ -236,6 +250,11 @@ namespace ImmersiveHud
                         hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
                     }
                     else if (displayStaminaBarWhenFoodBelow.Value && playerFoodPercentage <= foodPercentage.Value)
+                    {
+                        hudElements["staminapanel"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
+                    }
+                    else if (displayStaminaBarWhenHungry.Value && playerHungerCount >= foodHungerAmount.Value)
                     {
                         hudElements["staminapanel"].hudSetTargetAlpha(1);
                         hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
