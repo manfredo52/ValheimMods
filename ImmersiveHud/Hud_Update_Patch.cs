@@ -30,6 +30,21 @@ namespace ImmersiveHud
             // Reset timer when changing map modes.
             if (prevState != isMiniMapActive)
                 hudElements["MiniMap"].timeFade = 0;
+
+            getPlayerTotalFoodValue(player);
+        }
+
+        public static void getPlayerTotalFoodValue(Player player)
+        {
+            playerTotalFoodValue = playerCurrentFoodValue = 0;
+
+            foreach (Player.Food food in player.GetFoods())
+            {
+                playerTotalFoodValue += food.m_item.m_shared.m_food;
+                playerCurrentFoodValue += food.m_health;
+            }
+
+            playerFoodPercentage = playerCurrentFoodValue / playerTotalFoodValue;
         }
 
         public static void setValuesBasedOnHud(bool pressedHideKey, bool pressedShowKey)
@@ -141,11 +156,16 @@ namespace ImmersiveHud
                     }
 
                     // Display health panel when below a given percentage.
-                    if (displayHealthWhenBelowPercentage.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
+                    if (displayHealthWhenBelow.Value && localPlayer.GetHealthPercentage() <= healthPercentage.Value)
                     {
                         hudElements["healthpanel"].hudSetTargetAlpha(1);
                         hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
-                    }                
+                    }
+                    else if (displayHealthWhenFoodBelow.Value && playerFoodPercentage <= foodPercentage.Value)
+                    {
+                        hudElements["healthpanel"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_HPBar"].hudSetTargetAlpha(1);
+                    }
                     else
                     {
                         hudElements["healthpanel"].hudSetTargetAlpha(0);
@@ -169,7 +189,15 @@ namespace ImmersiveHud
                         if (displayFoodBarWhenEating.Value && playerAteFood)
                             hudElements["BetterUI_FoodBar"].showHudForDuration();
 
-                        hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
+                        // Display food bar when below a given percentage.
+                        if (displayFoodBarWhenBelow.Value && playerFoodPercentage <= foodPercentage.Value)
+                        {
+                            hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(1);
+                        } 
+                        else
+                        {
+                            hudElements["BetterUI_FoodBar"].hudSetTargetAlpha(0);
+                        }
                     }
                 }
 
@@ -202,7 +230,12 @@ namespace ImmersiveHud
                     }
 
                     // Display stamina bar when below a given percentage.
-                    if (displayStaminaBarWhenBelowPercentage.Value && localPlayer.GetStaminaPercentage() <= staminaPercentage.Value)
+                    if (displayStaminaBarWhenBelow.Value && localPlayer.GetStaminaPercentage() <= staminaPercentage.Value)
+                    {
+                        hudElements["staminapanel"].hudSetTargetAlpha(1);
+                        hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);
+                    }
+                    else if (displayStaminaBarWhenFoodBelow.Value && playerFoodPercentage <= foodPercentage.Value)
                     {
                         hudElements["staminapanel"].hudSetTargetAlpha(1);
                         hudElements["BetterUI_StaminaBar"].hudSetTargetAlpha(1);

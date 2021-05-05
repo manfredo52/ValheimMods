@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.2")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.3")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -82,20 +82,24 @@ namespace ImmersiveHud
         //public static ConfigEntry<bool> displayHealthWhenDamaged;
         //public static ConfigEntry<bool> displayHealthWhenHungry;
         public static ConfigEntry<bool> displayHealthWhenEating;
-        public static ConfigEntry<bool> displayHealthWhenBelowPercentage;
+        public static ConfigEntry<bool> displayHealthWhenBelow;
+        public static ConfigEntry<bool> displayHealthWhenFoodBelow;
         public static ConfigEntry<float> healthPercentage;
         public static ConfigEntry<bool> showHealthOnKeyPressed;
 
         // Hud Element - Food Bar (Better UI)
         public static ConfigEntry<bool> displayFoodBarInInventory;
         public static ConfigEntry<bool> displayFoodBarWhenEating;
+        public static ConfigEntry<bool> displayFoodBarWhenBelow;
+        public static ConfigEntry<float> foodPercentage;
         public static ConfigEntry<bool> showFoodBarOnKeyPressed;
 
         // Hud Element - Stamina Bar
         public static ConfigEntry<bool> displayStaminaBarInInventory;
         public static ConfigEntry<bool> displayStaminaBarOnUse;
         public static ConfigEntry<bool> displayStaminaBarWhenEating;
-        public static ConfigEntry<bool> displayStaminaBarWhenBelowPercentage;
+        public static ConfigEntry<bool> displayStaminaBarWhenBelow;
+        public static ConfigEntry<bool> displayStaminaBarWhenFoodBelow;
         public static ConfigEntry<float> staminaPercentage;
         public static ConfigEntry<bool> showStaminaBarOnKeyPressed;
 
@@ -133,6 +137,11 @@ namespace ImmersiveHud
         public static ConfigEntry<bool> displayQuickSlotsInInventory;
         //public static ConfigEntry<bool> displayQuickSlotsOnItemSwitch;
         public static ConfigEntry<bool> showQuickSlotsOnKeyPressed;
+
+        // Player Data
+        public static float playerTotalFoodValue;
+        public static float playerCurrentFoodValue;
+        public static float playerFoodPercentage;
 
         // Character States
         public static bool characterEquippedItem;
@@ -300,18 +309,30 @@ namespace ImmersiveHud
             displayTimeAlways           = Config.Bind<bool>("- Settings: Display -", "displayTimeAlways", false, "Always display the time or clock (Requires oryxen's display day and time mod).");
 
             // Display Scenario Settings - Health          
-            displayHealthInInventory            = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
-            //displayHealthDuringRegen          = Config.Bind<bool>("Display - Health", "displayDuringRegen", false, "During health regen, the health panel will display.");
-            //displayHealthWhenDamaged          = Config.Bind<bool>("Display - Health", "displayWhenDamaged", false, "Display the health panel when damaged.");
-            displayHealthWhenEating             = Config.Bind<bool>("Display - Health", "displayHealthWhenEating", false, "Display the health panel when you eat food.");
-            displayHealthWhenBelowPercentage    = Config.Bind<bool>("Display - Health", "displayWhenBelowPercentage", false, "When you are at or below a certain health percentage, display the health panel.");
-            healthPercentage                    = Config.Bind<float>("Display - Health", "healthPercentage", 0.75f, new ConfigDescription("Health percentage at which the health panel should be displayed", new AcceptableValueRange<float>(0f, 1f)));
-            showHealthOnKeyPressed              = Config.Bind<bool>("Display - Health", "showHealthOnKeyPressed", true, "Show the health panel when the show hud key is pressed.");
+            displayHealthInInventory    = Config.Bind<bool>("Display - Health", "displayHealthInInventory", true, "Display your health when in the inventory.");
+            //displayHealthDuringRegen  = Config.Bind<bool>("Display - Health", "displayDuringRegen", false, "During health regen, the health panel will display.");
+            //displayHealthWhenDamaged  = Config.Bind<bool>("Display - Health", "displayWhenDamaged", false, "Display the health panel when damaged.");
+            displayHealthWhenEating     = Config.Bind<bool>("Display - Health", "displayHealthWhenEating", false, "Display the health panel when you eat food.");
+            displayHealthWhenBelow      = Config.Bind<bool>("Display - Health", "displayHealthWhenBelow", false, "When you are at or below a certain health percentage, display the health panel.");
+            displayHealthWhenFoodBelow  = Config.Bind<bool>("Display - Health", "displayHealthWhenFoodBelow", false, "When you are at or below a certain food percentage, display the health panel.");
+            healthPercentage            = Config.Bind<float>("Display - Health", "healthPercentage", 0.75f, new ConfigDescription("Health percentage at which the health panel should be displayed", new AcceptableValueRange<float>(0f, 1f)));
+            showHealthOnKeyPressed      = Config.Bind<bool>("Display - Health", "showHealthOnKeyPressed", true, "Show the health panel when the show hud key is pressed.");
 
             // Display Scenario Settings - Food Bar (Better UI)
             displayFoodBarInInventory   = Config.Bind<bool>("Display - Food Bar (Better UI)", "displayBetterUIFoodBarInInventory", true, "Display the food bar when in the inventory.");
             displayFoodBarWhenEating    = Config.Bind<bool>("Display - Food Bar (Better UI)", "displayFoodBarWhenEating", true, "Display the food bar when you eat food.");
+            displayFoodBarWhenBelow     = Config.Bind<bool>("Display - Food Bar (Better UI)", "displayFoodBarWhenBelow", true, "When you are at or below a certain food percentage, display the food bar.");
+            foodPercentage              = Config.Bind<float>("Display - Food Bar (Better UI)", "foodPercentage", 0.50f, new ConfigDescription("Food percentage at which the food bar should be displayed. This option works for the health and stamina settings if enabled.", new AcceptableValueRange<float>(0f, 1f)));
             showFoodBarOnKeyPressed     = Config.Bind<bool>("Display - Food Bar (Better UI)", "showFoodBarOnKeyPressed", true, "Display the food bar when the show hud key is pressed.");
+
+            // Display Scenario Settings - Stamina
+            displayStaminaBarInInventory    = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarInInventory", true, "Display the stamina bar when in the inventory.");
+            displayStaminaBarOnUse          = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarOnUse", true, "Display the stamina bar when stamina is used.");
+            displayStaminaBarWhenEating     = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenEating", true, "Display the stamina bar when you eat food.");
+            displayStaminaBarWhenBelow      = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenBelow", false, "When you are at or below a certain stamina percentage, display the stamina bar.");
+            displayStaminaBarWhenFoodBelow  = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenFoodBelow", false, "When you are at or below a certain food percentage, display the stamina bar.");
+            staminaPercentage               = Config.Bind<float>("Display - Stamina Bar", "staminaPercentage", 0.99f, new ConfigDescription("Stamina percentage at which the stamina bar should be displayed.", new AcceptableValueRange<float>(0f, 1f)));
+            showStaminaBarOnKeyPressed      = Config.Bind<bool>("Display - Stamina Bar", "showStaminaBarOnKeyPressed", true, "Show the stamina bar when the show hud key is pressed.");
 
             // Display Scenario Settings - Forsaken Power           
             displayPowerInInventory         = Config.Bind<bool>("Display - Forsaken Power", "displayPowerInInventory", true, "Display the forsaken power when in the inventory.");
@@ -328,14 +349,6 @@ namespace ImmersiveHud
             // Display Scenario Settings - Status Effects 
             displayStatusEffectsInInventory     = Config.Bind<bool>("Display - Status Effects", "displayStatusEffectsInInventory", true, "Display status effects when in the inventory.");
             showStatusEffectsOnKeyPressed       = Config.Bind<bool>("Display - Status Effects", "showStatusEffectsOnKeyPressed", true, "Show the status effects when the show hud key is pressed.");
-
-            // Display Scenario Settings - Stamina
-            displayStaminaBarInInventory    = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarInInventory", true, "Display the stamina bar when in the inventory.");
-            displayStaminaBarOnUse          = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarOnUse", true, "Display the stamina bar when stamina is used.");
-            displayStaminaBarWhenEating     = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenEating", true, "Display the stamina bar when you eat food.");
-            displayStaminaBarWhenBelowPercentage = Config.Bind<bool>("Display - Stamina Bar", "displayStaminaBarWhenBelowPercentage", false, "When you are at or below a certain stamina percentage, display the stamina bar.");
-            staminaPercentage               = Config.Bind<float>("Display - Stamina Bar", "staminaPercentage", 0.99f, new ConfigDescription("Stamina percentage at which the stamina bar should be displayed", new AcceptableValueRange<float>(0f, 1f)));
-            showStaminaBarOnKeyPressed      = Config.Bind<bool>("Display - Stamina Bar", "showStaminaBarOnKeyPressed", true, "Show the stamina bar when the show hud key is pressed.");
 
             // Display Scenario Settings - MiniMap
             displayMiniMapInInventory   = Config.Bind<bool>("Display - MiniMap", "displayMiniMapInInventory", true, "Display the minimap when in the inventory.");
