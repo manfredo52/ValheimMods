@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.4")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.5")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -87,13 +87,20 @@ namespace ImmersiveHud
         public static ConfigEntry<float> healthPercentage;
         public static ConfigEntry<bool> showHealthOnKeyPressed;
 
+        // Hud Element - Food
+        public static ConfigEntry<int> foodHungerAmount;
+        public static ConfigEntry<float> foodPercentage;
+        public static ConfigEntry<bool> hungerNotification;
+        public static ConfigEntry<int> hungerNotificationInterval;
+        public static ConfigEntry<hungerNotificationOptions> hungerNotificationOption;
+        public static ConfigEntry<string> hungerNotificationText;
+        public static ConfigEntry<notificationTypes> hungerNotificationType; 
+
         // Hud Element - Food Bar (Better UI)
         public static ConfigEntry<bool> displayFoodBarInInventory;
         public static ConfigEntry<bool> displayFoodBarWhenHungry;
         public static ConfigEntry<bool> displayFoodBarWhenEating;
         public static ConfigEntry<bool> displayFoodBarWhenBelow;
-        public static ConfigEntry<float> foodPercentage;
-        public static ConfigEntry<int> foodHungerAmount;
         public static ConfigEntry<bool> showFoodBarOnKeyPressed;
 
         // Hud Element - Stamina Bar
@@ -158,6 +165,20 @@ namespace ImmersiveHud
 
         // Other
         public static float fadeDuration = 0.5f;
+        public static float notificationTimer = 0f;
+
+        // Notification Types
+        public enum notificationTypes
+        {
+            SmallTopLeft,
+            LargeCenter
+        }
+
+        public enum hungerNotificationOptions
+        {
+            FoodHungerAmount,
+            FoodPercentage
+        }
 
         // List of hud elements
         public static string[] hudElementNames =
@@ -324,8 +345,13 @@ namespace ImmersiveHud
             showHealthOnKeyPressed      = Config.Bind<bool>("Display - Health", "showHealthOnKeyPressed", true, "Show the health panel when the show hud key is pressed.");
 
             // Display Scenario Settings - Food
-            foodHungerAmount    = Config.Bind<int>("Display - Food", "foodHungerAmount", 3, new ConfigDescription("The minimum amount of food icons that need to be flashing to be considered hungry.", new AcceptableValueRange<int>(1, 3)));
-            foodPercentage      = Config.Bind<float>("Display - Food", "foodPercentage", 0.35f, new ConfigDescription("Food percentage at which the food bar, health, or stamina should be displayed.", new AcceptableValueRange<float>(0f, 1f)));
+            foodHungerAmount        = Config.Bind<int>("Display - Food", "foodHungerAmount", 3, new ConfigDescription("The minimum amount of food icons that need to be flashing to be considered hungry.", new AcceptableValueRange<int>(1, 3)));
+            foodPercentage          = Config.Bind<float>("Display - Food", "foodPercentage", 0.35f, new ConfigDescription("Food percentage at which the food bar, health, or stamina should be displayed.", new AcceptableValueRange<float>(0f, 1f)));
+            hungerNotification      = Config.Bind<bool>("Display - Food", "hungerNotification", false, "Enable notifications for when you are hungry.");
+            hungerNotificationInterval = Config.Bind<int>("Display - Food", "hungerNotificationInterval", 25, new ConfigDescription("How often the notification should display in seconds.", new AcceptableValueRange<int>(5, 180)));
+            hungerNotificationOption = Config.Bind<hungerNotificationOptions>("Display - Food", "hungerNotificationOption", hungerNotificationOptions.FoodPercentage, new ConfigDescription("Option to be used for notifications."));
+            hungerNotificationText  = Config.Bind<string>("Display - Food", "hungerNotificationText", "I'm feeling a bit peckish.", "Message for hunger notification.");
+            hungerNotificationType  = Config.Bind<notificationTypes>("Display - Food", "hungerNotificationType", notificationTypes.SmallTopLeft, new ConfigDescription("Notification types for the hunger notification."));
 
             // Display Scenario Settings - Food Bar (Better UI)
             displayFoodBarInInventory   = Config.Bind<bool>("Display - Food Bar (Better UI)", "displayBetterUIFoodBarInInventory", true, "Display the food bar when in the inventory.");

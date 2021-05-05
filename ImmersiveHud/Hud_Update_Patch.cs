@@ -48,8 +48,6 @@ namespace ImmersiveHud
             }
 
             playerFoodPercentage = playerCurrentFoodValue / playerTotalFoodValue;
-
-            Debug.Log("Total: " + playerTotalFoodValue + "   Current: " + playerCurrentFoodValue + "   Percent: " + playerFoodPercentage + "   Hunger: " + playerHungerCount);
         }
 
         public static void setValuesBasedOnHud(bool pressedHideKey, bool pressedShowKey)
@@ -63,10 +61,12 @@ namespace ImmersiveHud
                     hudElements[name].targetAlphaPrev = hudElements[name].targetAlpha;
             }
 
+            // Hide hud key
             if (pressedHideKey)
             {
                 hudHidden = !hudHidden;
 
+                // Hud hidden notification
                 if (hudHiddenNotification.Value)
                 {
                     if (hudHidden)
@@ -77,6 +77,29 @@ namespace ImmersiveHud
 
                 foreach (string name in hudElementNames)
                     hudElements[name].resetTimers();
+            }
+
+            // Hunger notification
+            if (hungerNotification.Value && ((hungerNotificationOption.Value == hungerNotificationOptions.FoodHungerAmount && playerHungerCount >= foodHungerAmount.Value) || (hungerNotificationOption.Value == hungerNotificationOptions.FoodPercentage && playerFoodPercentage <= foodPercentage.Value)))
+            {
+                notificationTimer += Time.deltaTime;
+
+                if ((int) notificationTimer % hungerNotificationInterval.Value == 0)
+                {
+                    switch (hungerNotificationType.Value)
+                    {
+                        case notificationTypes.SmallTopLeft:
+                            MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, hungerNotificationText.Value);                         
+                            break;
+                        case notificationTypes.LargeCenter:
+                            MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, hungerNotificationText.Value);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    notificationTimer = 1;
+                }
             }
 
             if (hudHidden)
