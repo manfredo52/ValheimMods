@@ -32,8 +32,13 @@ namespace CustomizableCamera
         }
 
         public static void checkInteriorChange(Player player)
-        {
-            if (playerInShelter != player.InShelter())
+        {        
+            if (playerInInterior != player.InInterior())
+            {
+                playerInInterior = player.InInterior();
+                canChangeCameraDistance = true;
+            }
+            else if (playerInShelter != player.InShelter())
             {
                 playerInShelter = player.InShelter();
                 canChangeCameraDistance = true;
@@ -65,13 +70,17 @@ namespace CustomizableCamera
             ___m_zoomSens = cameraZoomSensitivity.Value;
 
             // Separate camera distances for different scenarios.
-            if (cameraSeparateEditsEnabled.Value && canChangeCameraDistance)
+            if (canChangeCameraDistance)
             {
-                if (playerInShelter)
+                if (cameraDistanceInteriorsEnabled.Value && playerInInterior)
                     targetDistance = cameraDistanceInteriors.Value;
-                else if (characterControlledShip)
+                else if (cameraDistanceShelterEnabled.Value && playerInShelter)
+                    targetDistance = cameraDistanceShelter.Value;
+                else if (cameraDistanceBoatEnabled.Value && characterControlledShip)
                     targetDistance = cameraDistanceBoat.Value;
-                else
+                else if (cameraDistanceBoatEnabled.Value && characterStoppedShipControl)
+                    targetDistance = cameraDistance.Value;
+                else if (cameraDistanceExteriorsEnabled.Value && (!playerInShelter && !playerInInterior))
                     targetDistance = cameraDistance.Value;
 
                 canChangeCameraDistance = false;

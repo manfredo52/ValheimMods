@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.2.9")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.3.0")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -118,10 +118,14 @@ namespace CustomizableCamera
         public static ConfigEntry<bool> smoothZoomEnabled;
 
         // Misc Camera Settings - Distance
-        public static ConfigEntry<bool> cameraSeparateEditsEnabled;
         public static ConfigEntry<float> cameraDistance;
         public static ConfigEntry<float> cameraDistanceBoat;
+        public static ConfigEntry<bool> cameraDistanceBoatEnabled;
+        public static ConfigEntry<bool> cameraDistanceExteriorsEnabled;
         public static ConfigEntry<float> cameraDistanceInteriors;
+        public static ConfigEntry<bool> cameraDistanceInteriorsEnabled;
+        public static ConfigEntry<float> cameraDistanceShelter;
+        public static ConfigEntry<bool> cameraDistanceShelterEnabled;
         public static ConfigEntry<float> cameraMaxDistance;
         public static ConfigEntry<float> cameraMaxDistanceBoat;
 
@@ -140,6 +144,7 @@ namespace CustomizableCamera
         // State changing
         public static bool characterStateChanged;
         public static bool characterControlledShip;
+        public static bool characterStoppedShipControl;
         public static bool characterCrouched;
         public static bool characterAiming;
         public static bool characterSprinting;
@@ -148,6 +153,7 @@ namespace CustomizableCamera
 
         public static bool playerIsMoving;
         public static bool playerInShelter;
+        public static bool playerInInterior;
         public static bool isFirstPerson;
         public static bool onSwappedShoulder;
         public static bool canChangeCameraDistance;
@@ -186,10 +192,14 @@ namespace CustomizableCamera
             smoothZoomEnabled       = Config.Bind<bool>("- Misc -", "smoothZoomEnabled", true, "Enable if the zooming in and out to be smooth instead of an instant change.");
 
             // Misc Settings - Camera Distance
-            cameraSeparateEditsEnabled  = Config.Bind<bool>("- Misc Camera Distance -", "cameraSeparateEditsEnabled", false, "Enable separate distance edits for the camera distance. Affects boat and interiors settings.");
             cameraDistance              = Config.Bind<float>("- Misc Camera Distance -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Default camera distance from the player.", new AcceptableValueRange<float>(0, 100)));
             cameraDistanceBoat          = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceBoat", defaultCameraDistance, new ConfigDescription("Default camera distance when you start control of a ship.", new AcceptableValueRange<float>(0, 100)));
-            cameraDistanceInteriors     = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceInteriors", defaultCameraDistance, new ConfigDescription("Default camera distance when you go into interiors.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceBoatEnabled   = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceBoatEnabled", false, "Enable separate distance edit for boats.");
+            cameraDistanceInteriors      = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceInteriors", defaultCameraDistance, new ConfigDescription("Default camera distance when you go into an interior such as a dungeon.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceInteriorsEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceInteriorsEnabled", false, "Enable separate distance edit for interiors.");
+            cameraDistanceExteriorsEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceExteriorsEnabled", false, "Enable separate distance edit for exteriors. Uses cameraDistance value. This is used if you want to automatically go to the set camera distance when you move to an exterior.");
+            cameraDistanceShelter = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceShelter", defaultCameraDistance, new ConfigDescription("Default camera distance when you are under shelter.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceShelterEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceShelterEnabled", false, "Enable separate distance edit for shelter.");
             cameraMaxDistance           = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
             cameraMaxDistanceBoat       = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 

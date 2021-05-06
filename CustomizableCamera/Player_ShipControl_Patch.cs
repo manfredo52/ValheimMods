@@ -9,6 +9,7 @@ namespace CustomizableCamera
         private static void Postfix(Player __instance)
         {
             characterControlledShip = true;
+            characterStoppedShipControl = false;
             canChangeCameraDistance = true;
         }
     }
@@ -19,6 +20,7 @@ namespace CustomizableCamera
         private static void Postfix(Player __instance)
         {
             characterControlledShip = false;
+            characterStoppedShipControl = true;
             canChangeCameraDistance = true;
         }
     }
