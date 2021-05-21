@@ -25,6 +25,7 @@ namespace PassTheTime
         public static GameObject timeDisplay;
         public static GameObject dayDisplay;
         public static GameObject waitTextDisplay;
+        public static GameObject sliderDisplay;
 
         public static string displayFont = "Norsebold";
 
@@ -128,6 +129,7 @@ namespace PassTheTime
             CreateWaitTextDisplay();
             CreateDayDisplay();
             CreateTimeDisplay();
+            CreateTimeWaitSliderDisplay();
         }
 
         public static void CreateWaitTextDisplay()
@@ -136,14 +138,34 @@ namespace PassTheTime
 
             waitTextDisplay.transform.SetParent(waitDialog.transform);
             RectTransform rectTransform = waitTextDisplay.AddComponent<RectTransform>();
-            rectTransform.anchoredPosition = new Vector2(0, -25f);
+            rectTransform.anchoredPosition = new Vector2(0, 65f);
 
             Text text = waitTextDisplay.AddComponent<Text>();
             text.color = Color.white;
-            text.text = "Wait how long?";
+            text.text = "How long should I wait for?";
             text.enabled = true;
             text.font = fonts["Norsebold"];
-            text.fontSize = 32;
+            text.fontSize = 28;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.alignment = TextAnchor.MiddleCenter;
+        }
+
+        public static void CreateTimeWaitSliderDisplay()
+        {
+            sliderDisplay = new GameObject("PTTSliderDisplay");
+
+            sliderDisplay.transform.SetParent(waitDialog.transform);
+            RectTransform rectTransform = sliderDisplay.AddComponent<RectTransform>();
+            rectTransform.anchoredPosition = new Vector2(0, -25);
+
+            Text text = sliderDisplay.AddComponent<Text>();
+            text.color = Color.white;
+            text.text = "16 Hours";
+            text.enabled = true;
+            text.font = fonts["Norsebold"];
+            text.fontSize = 28;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.alignment = TextAnchor.MiddleCenter;
         }
 
         public static void CreateDayDisplay()
@@ -152,14 +174,15 @@ namespace PassTheTime
 
             dayDisplay.transform.SetParent(waitDialog.transform);
             RectTransform rectTransform = dayDisplay.AddComponent<RectTransform>();
-            rectTransform.anchoredPosition = new Vector2(-50f, 0);
+            rectTransform.anchoredPosition = new Vector2(-50, -65);
 
             Text text = dayDisplay.AddComponent<Text>();
             text.color = Color.white;
             text.text = GetCurrentDay();
             text.enabled = true;
             text.font = fonts["Norsebold"];
-            text.fontSize = 32;
+            text.fontSize = 28;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.alignment = TextAnchor.MiddleLeft;
         }
 
@@ -169,14 +192,15 @@ namespace PassTheTime
 
             timeDisplay.transform.SetParent(waitDialog.transform);
             RectTransform rectTransform = timeDisplay.AddComponent<RectTransform>();
-            rectTransform.anchoredPosition = new Vector2(50, 0);
+            rectTransform.anchoredPosition = new Vector2(50, -65);
 
             Text text = timeDisplay.AddComponent<Text>();
             text.color = Color.white;
             text.text = GetCurrentTime();
             text.enabled = true;
             text.font = fonts["Norsebold"];
-            text.fontSize = 32;
+            text.fontSize = 28;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.alignment = TextAnchor.MiddleRight;
         }
 
