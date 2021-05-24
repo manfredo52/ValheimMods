@@ -9,7 +9,7 @@ using HarmonyLib;
 
 namespace ImmersiveHud
 {
-    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.5")]
+    [BepInPlugin("manfredo52.ImmersiveHud", "Immersive Hud", "1.2.6")]
     [BepInProcess("valheim.exe")]
     public class ImmersiveHud : BaseUnityPlugin
     {
@@ -124,6 +124,7 @@ namespace ImmersiveHud
         // Hud Element - Hot Key Bar
         public static ConfigEntry<bool> displayHotKeyBarInInventory;
         public static ConfigEntry<bool> displayHotKeyBarOnItemSwitch;
+        public static ConfigEntry<bool> displayHotKeyBarWhenItemEquipped;
         public static ConfigEntry<bool> showHotKeyBarOnKeyPressed;
 
         // Hud Element - Status Effects    
@@ -162,6 +163,7 @@ namespace ImmersiveHud
         public static bool playerAteFood;
         public static bool playerUsedHotBarItem;
         public static bool playerUsedQuickSlotsItem;
+        public static bool playerHasItemEquipped;
 
         // Other
         public static float fadeDuration = 0.5f;
@@ -380,6 +382,7 @@ namespace ImmersiveHud
             // Display Scenario Settings - Hot Key Bar
             displayHotKeyBarInInventory     = Config.Bind<bool>("Display - Hot Key Bar", "displayHotKeyBarInInventory", true, "Display the hot key bar when in the inventory.");
             displayHotKeyBarOnItemSwitch    = Config.Bind<bool>("Display - Hot Key Bar", "displayHotKeyBarOnItemSwitch", false, "Display the hot key bar when you press any key for your hot bar items.");
+            displayHotKeyBarWhenItemEquipped = Config.Bind<bool>("Display - Hot Key Bar", "displayHotKeyBarWhenItemEquipped", false, "Display the hot key bar when you have an item equipped in either hand.");
             showHotKeyBarOnKeyPressed       = Config.Bind<bool>("Display - Hot Key Bar", "showHotKeyBarOnKeyPressed", true, "Show the hot key bar when the show hud key is pressed.");
 
             // Display Scenario Settings - Status Effects 

@@ -32,6 +32,14 @@ namespace ImmersiveHud
                 hudElements["MiniMap"].timeFade = 0;
 
             getPlayerTotalFoodValue(player);
+
+            ItemDrop.ItemData playerItemEquippedLeft = player.GetLeftItem();
+            ItemDrop.ItemData playerItemEquippedRight = player.GetRightItem();
+
+            if (playerItemEquippedLeft != null || playerItemEquippedRight != null)
+                playerHasItemEquipped = true;
+            else
+                playerHasItemEquipped = false;
         }
 
         public static void getPlayerTotalFoodValue(Player player)
@@ -319,8 +327,10 @@ namespace ImmersiveHud
                     // Display on item switch/use
                     if (displayHotKeyBarOnItemSwitch.Value && playerUsedHotBarItem)
                         hudElements["HotKeyBar"].showHudForDuration();
-
-                    hudElements["HotKeyBar"].hudSetTargetAlpha(0);
+                    else if (displayHotKeyBarWhenItemEquipped.Value && playerHasItemEquipped)
+                        hudElements["HotKeyBar"].hudSetTargetAlpha(1);
+                    else
+                        hudElements["HotKeyBar"].hudSetTargetAlpha(0);
                 }
 
                 // Status Effects Display
