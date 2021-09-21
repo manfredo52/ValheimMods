@@ -6,7 +6,7 @@ using HarmonyLib;
 
 namespace CustomizableCamera
 {
-    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.3.0")]
+    [BepInPlugin("manfredo52.CustomizableCamera", "Customizable Camera Mod", "1.3.2")]
     [BepInProcess("valheim.exe")]
     public class CustomizableCamera : BaseUnityPlugin
     {
@@ -38,14 +38,13 @@ namespace CustomizableCamera
         // Crosshair
         public static float playerInitialCrosshairX;
         public static float playerInitialCrosshairY;
-        public static Image playerCrosshair;
-        public static Image playerBowCrosshair;
+
+        public static Vector3 lastSetCrosshairPos;
+        public static Vector3 lastSetStealthBarPos;
+        public static Vector3 targetCrosshairPos;
+        public static Vector3 targetStealthBarPos;
 
         // Sneak Hud
-        public static GuiBar playerStealthBar;
-        public static GameObject playerStealthIndicator;
-        public static GameObject playerStealthIndicatorTargeted;
-        public static GameObject playerStealthIndicatorAlert;
         public static float playerInitialStealthBarX;
         public static float playerInitialStealthBarY;
 
@@ -179,7 +178,7 @@ namespace CustomizableCamera
         public static characterState __characterState;
         public static characterState __characterStatePrev;
 
-        private void Awake()
+        public void Awake()
         {
             // Main
             isEnabled   = Config.Bind<bool>("- General -", "Enable Mod", true, "Enable or disable the mod");
@@ -192,16 +191,16 @@ namespace CustomizableCamera
             smoothZoomEnabled       = Config.Bind<bool>("- Misc -", "smoothZoomEnabled", true, "Enable if the zooming in and out to be smooth instead of an instant change.");
 
             // Misc Settings - Camera Distance
-            cameraDistance              = Config.Bind<float>("- Misc Camera Distance -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Default camera distance from the player.", new AcceptableValueRange<float>(0, 100)));
-            cameraDistanceBoat          = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceBoat", defaultCameraDistance, new ConfigDescription("Default camera distance when you start control of a ship.", new AcceptableValueRange<float>(0, 100)));
-            cameraDistanceBoatEnabled   = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceBoatEnabled", false, "Enable separate distance edit for boats.");
-            cameraDistanceInteriors      = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceInteriors", defaultCameraDistance, new ConfigDescription("Default camera distance when you go into an interior such as a dungeon.", new AcceptableValueRange<float>(0, 100)));
-            cameraDistanceInteriorsEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceInteriorsEnabled", false, "Enable separate distance edit for interiors.");
-            cameraDistanceExteriorsEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceExteriorsEnabled", false, "Enable separate distance edit for exteriors. Uses cameraDistance value. This is used if you want to automatically go to the set camera distance when you move to an exterior.");
-            cameraDistanceShelter = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceShelter", defaultCameraDistance, new ConfigDescription("Default camera distance when you are under shelter.", new AcceptableValueRange<float>(0, 100)));
-            cameraDistanceShelterEnabled = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceShelterEnabled", false, "Enable separate distance edit for shelter.");
-            cameraMaxDistance           = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
-            cameraMaxDistanceBoat       = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
+            cameraDistance                  = Config.Bind<float>("- Misc Camera Distance -", "cameraDistance", defaultCameraDistance, new ConfigDescription("Default camera distance from the player.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceBoat              = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceBoat", defaultCameraDistance, new ConfigDescription("Default camera distance when you start control of a ship.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceBoatEnabled       = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceBoatEnabled", false, "Enable separate distance edit for boats.");
+            cameraDistanceInteriors         = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceInteriors", defaultCameraDistance, new ConfigDescription("Default camera distance when you go into an interior such as a dungeon.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceInteriorsEnabled  = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceInteriorsEnabled", false, "Enable separate distance edit for interiors.");
+            cameraDistanceExteriorsEnabled  = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceExteriorsEnabled", false, "Enable separate distance edit for exteriors. Uses cameraDistance value. This is used if you want to automatically go to the set camera distance when you move to an exterior.");
+            cameraDistanceShelter           = Config.Bind<float>("- Misc Camera Distance -", "cameraDistanceShelter", defaultCameraDistance, new ConfigDescription("Default camera distance when you are under shelter.", new AcceptableValueRange<float>(0, 100)));
+            cameraDistanceShelterEnabled    = Config.Bind<bool>("- Misc Camera Distance -", "cameraDistanceShelterEnabled", false, "Enable separate distance edit for shelter.");
+            cameraMaxDistance               = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistance", defaultCameraMaxDistance, new ConfigDescription("Maximum distance you can zoom out.", new AcceptableValueRange<float>(1, 100)));
+            cameraMaxDistanceBoat           = Config.Bind<float>("- Misc Camera Distance -", "cameraMaxDistanceBoat", defaultCameraMaxDistanceBoat, new ConfigDescription("Maximum distance you can zoom out when on a boat.", new AcceptableValueRange<float>(1, 100)));
 
             // Time Settings
             timeFOVDuration              = Config.Bind<float>("- Misc Time Values -", "timeFOVDuration", defaultTimeDuration, new ConfigDescription("How quickly the fov changes.", new AcceptableValueRange<float>(0.001f, 50f)));
@@ -223,23 +222,23 @@ namespace CustomizableCamera
 
             // Sprinting
             cameraSprintFOV = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintFOV", defaultFOV, "Camera fov when sprinting.");
-            cameraSprintX = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintX", defaultPosition.x, "Camera X position when sprinting.");
-            cameraSprintY = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintY", defaultPosition.y, "Camera Y position when sprinting.");
-            cameraSprintZ = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintZ", defaultPosition.z, "Camera Z position when sprinting.");
+            cameraSprintX   = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintX", defaultPosition.x, "Camera X position when sprinting.");
+            cameraSprintY   = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintY", defaultPosition.y, "Camera Y position when sprinting.");
+            cameraSprintZ   = Config.Bind<float>("Camera Settings - Sprinting", "cameraSprintZ", defaultPosition.z, "Camera Z position when sprinting.");
 
             // Walking
-            cameraWalkFOV = Config.Bind<float>("Camera Settings - Walk", "cameraWalkFOV", defaultFOV, "Camera fov when walking.");
-            cameraWalkX = Config.Bind<float>("Camera Settings - Walk", "cameraWalkX", defaultPosition.x, "Camera X position when walking.");
-            cameraWalkY = Config.Bind<float>("Camera Settings - Walk", "cameraWalkY", defaultPosition.y, "Camera Y position when walking.");
-            cameraWalkZ = Config.Bind<float>("Camera Settings - Walk", "cameraWalkZ", defaultPosition.z, "Camera Z position when walking.");
+            cameraWalkFOV   = Config.Bind<float>("Camera Settings - Walk", "cameraWalkFOV", defaultFOV, "Camera fov when walking.");
+            cameraWalkX     = Config.Bind<float>("Camera Settings - Walk", "cameraWalkX", defaultPosition.x, "Camera X position when walking.");
+            cameraWalkY     = Config.Bind<float>("Camera Settings - Walk", "cameraWalkY", defaultPosition.y, "Camera Y position when walking.");
+            cameraWalkZ     = Config.Bind<float>("Camera Settings - Walk", "cameraWalkZ", defaultPosition.z, "Camera Z position when walking.");
 
             // Boat
-            cameraBoatFOV   = Config.Bind<float>("Camera Settings - Boat", "cameraBoatFOV", defaultFOV, "Camera fov when sailing.");
-            cameraBoatX     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatX", defaultPosition.x, "Camera X position when sailing.");
-            cameraBoatY     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
-            cameraBoatZ     = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
-            cameraLockedBoatYEnabled = Config.Bind<bool>("Camera Settings - Boat", "cameraLockedBoatYEnabled", false, "Enable or disable the y axis being locked to a specific value when sailing. Reduces motion sickness.");
-            cameraLockedBoatY = Config.Bind<float>("Camera Settings - Boat", "cameraLockedBoatY", 33, "The y axis value that the camera should be locked to when enabled. Clipping with the ocean/waves can occur if set too low.");
+            cameraBoatFOV               = Config.Bind<float>("Camera Settings - Boat", "cameraBoatFOV", defaultFOV, "Camera fov when sailing.");
+            cameraBoatX                 = Config.Bind<float>("Camera Settings - Boat", "cameraBoatX", defaultPosition.x, "Camera X position when sailing.");
+            cameraBoatY                 = Config.Bind<float>("Camera Settings - Boat", "cameraBoatY", defaultPosition.y, "Camera Y position when sailing.");
+            cameraBoatZ                 = Config.Bind<float>("Camera Settings - Boat", "cameraBoatZ", defaultPosition.z, "Camera Z position when sailing.");
+            cameraLockedBoatYEnabled    = Config.Bind<bool>("Camera Settings - Boat", "cameraLockedBoatYEnabled", false, "Enable or disable the y axis being locked to a specific value when sailing. Reduces motion sickness.");
+            cameraLockedBoatY           = Config.Bind<float>("Camera Settings - Boat", "cameraLockedBoatY", 33, "The y axis value that the camera should be locked to when enabled. Clipping with the ocean/waves can occur if set too low.");
 
             // Bow
             cameraBowSettingsEnabled = Config.Bind<bool>("Camera Settings - Bow", "bowSettingsEnable", false, "Enable or disable if there should be separate camera settings when holding a bow.");
@@ -248,14 +247,14 @@ namespace CustomizableCamera
             cameraBowZ               = Config.Bind<float>("Camera Settings - Bow", "cameraBowZ", defaultPosition.z, "Camera Z position when holding a bow.");
 
             // Bow Zoom
-            bowZoomEnabled      = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomEnable", false, "Enable or disable bow zoom");
-            bowZoomOnDraw       = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomOnDraw", true, "Zoom in automatically when drawing the bow.");
-            bowZoomKeyToggle    = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomKeyToggle", true, "Zoom key toggles zoom if enabled, otherwise hold the zoom key.");
-            bowZoomKey          = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowZoomKey", new KeyboardShortcut(KeyCode.Mouse1), "Keyboard shortcut or mouse button for zooming in with the bow.");
-            bowZoomSensitivityEnabled = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomSensitivityEnable", false, "Enable or disable bow zoom sensitivity.");
-            bowZoomSensitivity  = Config.Bind<float>("Camera Settings - Bow Zoom", "bowZoomSensitivity", 0.5f, new ConfigDescription("Mouse sensitivity multiplier when zooming in with the bow.", new AcceptableValueRange<float>(0f, 1f)));
-            bowCancelDrawKey    = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
-            cameraBowZoomFOV    = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
+            bowZoomEnabled              = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomEnable", false, "Enable or disable bow zoom");
+            bowZoomOnDraw               = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomOnDraw", true, "Zoom in automatically when drawing the bow.");
+            bowZoomKeyToggle            = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomKeyToggle", true, "Zoom key toggles zoom if enabled, otherwise hold the zoom key.");
+            bowZoomKey                  = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowZoomKey", new KeyboardShortcut(KeyCode.Mouse1), "Keyboard shortcut or mouse button for zooming in with the bow.");
+            bowZoomSensitivityEnabled   = Config.Bind<bool>("Camera Settings - Bow Zoom", "bowZoomSensitivityEnable", false, "Enable or disable bow zoom sensitivity.");
+            bowZoomSensitivity          = Config.Bind<float>("Camera Settings - Bow Zoom", "bowZoomSensitivity", 0.5f, new ConfigDescription("Mouse sensitivity multiplier when zooming in with the bow.", new AcceptableValueRange<float>(0f, 1f)));
+            bowCancelDrawKey            = Config.Bind<KeyboardShortcut>("Camera Settings - Bow Zoom", "bowCancelDrawKey", new KeyboardShortcut(KeyCode.Mouse4), "Keyboard shortcut or mouse button to cancel bow draw. This is only necessary when your zoom key interferes with the block key.");
+            cameraBowZoomFOV            = Config.Bind<float>("Camera Settings - Bow Zoom", "cameraBowZoomFOV", defaultBowZoomFOV, "FOV when zooming in with the bow.");
             
             // FP Compatibility
             bowZoomFirstPersonEnabled   = Config.Bind<bool>("Camera Settings - First Person Mod Compatibility", "bowZoomFirstPersonEnable", false, "Enable or disable bow zoom when in first person. Ensures compatibility with first person mods.");
@@ -263,19 +262,18 @@ namespace CustomizableCamera
             cameraBowZoomFirstPersonFOV = Config.Bind<float>("Camera Settings - First Person Mod Compatibility", "cameraBowZoomFirstPersonFOV", defaultBowZoomFPFOV, "FOV when zooming in with the bow when in first person.");
 
             // Crosshair
-            playerBowCrosshairEditsEnabled = Config.Bind<bool>("Crosshair Settings", "bowCrosshairEditsEnable", true, "Enable or disable crosshair edits when using a bow.");
-            playerBowCrosshairX = Config.Bind<float>("Crosshair Settings", "bowCrosshairX", defaultValue, "Bow crosshair x position.");
-            playerBowCrosshairY = Config.Bind<float>("Crosshair Settings", "bowCrosshairY", defaultValue, "Bow crosshair y position.");
+            playerBowCrosshairEditsEnabled  = Config.Bind<bool>("Crosshair Settings", "bowCrosshairEditsEnable", true, "Enable or disable crosshair edits when using a bow.");
+            playerBowCrosshairX             = Config.Bind<float>("Crosshair Settings", "bowCrosshairX", defaultValue, "Bow crosshair x position.");
+            playerBowCrosshairY             = Config.Bind<float>("Crosshair Settings", "bowCrosshairY", defaultValue, "Bow crosshair y position.");
 
             DoPatching();
         }
 
         private static void setMiscCameraSettings(GameCamera __instance)
         {   
-            __instance.m_smoothness = cameraSmoothness.Value;  
-            __instance.m_maxDistance = cameraMaxDistance.Value;
-            __instance.m_maxDistanceBoat = cameraMaxDistanceBoat.Value;
-            
+            __instance.m_smoothness         = cameraSmoothness.Value;  
+            __instance.m_maxDistance        = cameraMaxDistance.Value;
+            __instance.m_maxDistanceBoat    = cameraMaxDistanceBoat.Value;            
         }
 
         public static void DoPatching() => new Harmony("CustomizableCamera").PatchAll();
@@ -283,7 +281,7 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(GameCamera), "Awake")]
         public static class GameCamera_Awake_Patch
         {
-            private static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
+            public static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
             {
                 if (!isEnabled.Value)
                     return;
@@ -298,7 +296,7 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(GameCamera), "ApplySettings")]
         public static class GameCamera_ApplySettings_Patch
         {
-            private static void Postfix(GameCamera __instance)
+            public static void Postfix(GameCamera __instance)
             {
                 if (!isEnabled.Value)
                     return;
@@ -310,28 +308,25 @@ namespace CustomizableCamera
         [HarmonyPatch(typeof(Hud), "Awake")]
         public static class Hud_CrosshairAwake_Patch
         {
-            private static void Postfix(Hud __instance)
+            public static void Postfix(Hud __instance)
             {
-                playerCrosshair = __instance.m_crosshair;
-                playerBowCrosshair = __instance.m_crosshairBow;
-                playerStealthBar = __instance.m_stealthBar;
+                playerInitialCrosshairX = __instance.m_crosshair.transform.position.x;
+                playerInitialCrosshairY = __instance.m_crosshair.transform.position.y;
 
-                playerStealthIndicator = __instance.m_hidden;
-                playerStealthIndicatorTargeted = __instance.m_targeted;
-                playerStealthIndicatorAlert = __instance.m_targetedAlert;
+                playerInitialStealthBarX = __instance.m_stealthBar.transform.position.x;
+                playerInitialStealthBarY = __instance.m_stealthBar.transform.position.y;
 
-                playerInitialCrosshairX = playerCrosshair.transform.position.x;
-                playerInitialCrosshairY = playerCrosshair.transform.position.y;
-
-                playerInitialStealthBarX = playerStealthBar.transform.position.x;
-                playerInitialStealthBarY = playerStealthBar.transform.position.y;
+                lastSetCrosshairPos     = __instance.m_crosshair.transform.position;
+                lastSetStealthBarPos    = __instance.m_stealthBar.transform.position;
+                targetCrosshairPos      = __instance.m_crosshair.transform.position;
+                targetStealthBarPos     = __instance.m_stealthBar.transform.position;
             }
         }
 
         [HarmonyPatch(typeof(PlayerController), "Awake")]
         public static class PlayerController_SetSensAwake_Patch
         {
-            private static void Postfix()
+            public static void Postfix()
             {           
                 playerMouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", PlayerController.m_mouseSens);
             }

@@ -8,7 +8,7 @@ namespace CustomizableCamera
     {
         public static bool isPlayerAbleToCrouch;
 
-        private static void Prefix(Player __instance, ref bool block, ref bool blockHold)
+        public static void Prefix(Player __instance, ref bool block, ref bool blockHold)
         {
             if (!isEnabled.Value || !__instance)
                 return;
@@ -72,7 +72,7 @@ namespace CustomizableCamera
             }
         }
 
-        private static void Postfix(Player __instance, Vector3 movedir, bool blockHold, bool crouch, bool run, bool autoRun)
+        public static void Postfix(Player __instance, Vector3 movedir, bool blockHold, bool crouch, bool run, bool autoRun)
         {
             if (!__instance)
                 return;

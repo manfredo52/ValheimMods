@@ -9,25 +9,25 @@ namespace CustomizableCamera
     {
         // Reimplement camera settings reset
         // Reset settings on settings save.
-        public static void resetCameraSettings(GameCamera __instance)
+        private static void resetCameraSettings(GameCamera __instance)
         {
             __instance.m_fov = defaultFOV;
             __instance.m_3rdOffset = defaultPosition;
         }
 
-        public static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
+        private static void moveToNewCameraPosition(GameCamera __instance, Vector3 targetVector, float time)
         {
             __instance.m_3rdOffset = Vector3.Lerp(__instance.m_3rdOffset, targetVector, time / timeCameraPosDuration.Value);
             lastSetPos = __instance.m_3rdOffset;
         }
 
-        public static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
+        private static void moveToNewCameraFOV(GameCamera __instance, float targetFOV, float time)
         {
             __instance.m_fov = Mathf.Lerp(lastSetFOV, targetFOV, time / timeFOVDuration.Value);
             lastSetFOV = __instance.m_fov;
         }
 
-        public static void moveToNewCameraFOVBowZoom(GameCamera __instance, float targetFOV, float time, interpolationTypes interpType)
+        private static void moveToNewCameraFOVBowZoom(GameCamera __instance, float targetFOV, float time, interpolationTypes interpType)
         {
             if (interpType == interpolationTypes.SmoothStep)
                 __instance.m_fov = Mathf.SmoothStep(lastSetFOV, targetFOV, time / timeBowZoomFOVDuration.Value);
@@ -37,7 +37,7 @@ namespace CustomizableCamera
             lastSetFOV = __instance.m_fov;
         }
 
-        public static bool checkBowZoomFOVLerpDuration(GameCamera __instance, float timeElapsed)
+        private static bool checkBowZoomFOVLerpDuration(GameCamera __instance, float timeElapsed)
         {
             if (lastSetFOV == targetFOV || timeElapsed >= timeFOVDuration.Value)
             {
@@ -50,7 +50,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static bool checkFOVLerpDuration(GameCamera __instance, float timeElapsed)
+        private static bool checkFOVLerpDuration(GameCamera __instance, float timeElapsed)
         {
             if (lastSetFOV == targetFOV)
             {
@@ -68,7 +68,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static bool checkCameraLerpDuration(GameCamera __instance, float timeElapsed)
+        private static bool checkCameraLerpDuration(GameCamera __instance, float timeElapsed)
         {
             if (lastSetPos == targetPos)
             {
@@ -86,7 +86,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static void setValuesBasedOnCharacterState(Player __instance, bool isFirstPerson)
+        private static void setValuesBasedOnCharacterState(Player __instance, bool isFirstPerson)
         {
             __characterStatePrev = __characterState;
 
@@ -172,7 +172,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static bool checkIfFirstPerson(float ___m_distance)
+        private static bool checkIfFirstPerson(float ___m_distance)
         {
             if (___m_distance <= 0.0)
                 return true;
@@ -180,7 +180,7 @@ namespace CustomizableCamera
             return false;
         }
 
-        private static void Postfix(GameCamera __instance, ref Vector3 pos, ref float ___m_distance)
+        public static void Postfix(GameCamera __instance, ref Vector3 pos, ref float ___m_distance)
         {
             Player localPlayer = Player.m_localPlayer;
 

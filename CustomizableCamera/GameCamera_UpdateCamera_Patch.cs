@@ -18,7 +18,7 @@ namespace CustomizableCamera
         public static float camDistance;
         public static float zoomSens;
 
-        public static bool checkLerpDuration(float timeElapsed)
+        private static bool checkLerpDuration(float timeElapsed)
         {
             if (lastSetDistance == targetDistance || timeElapsed >= timeDuration)
             {
@@ -31,7 +31,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static void checkInteriorChange(Player player)
+        private static void checkInteriorChange(Player player)
         {        
             if (playerInInterior != player.InInterior())
             {
@@ -45,7 +45,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static void moveToNewCameraDistance(float time, ref float ___m_distance)
+        private static void moveToNewCameraDistance(float time, ref float ___m_distance)
         {
             // Removes the delay when the player is going into first person.
             if (___m_distance <= 0.1 && targetDistance == 0)        
@@ -56,7 +56,7 @@ namespace CustomizableCamera
             lastSetDistance = ___m_distance;
         }
 
-        private static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
+        public static void Postfix(GameCamera __instance, ref float ___m_distance, ref float ___m_zoomSens)
         {
             if (!isEnabled.Value || GameCamera.InFreeFly())
                 return;

@@ -4,7 +4,7 @@ using HarmonyLib;
 
 // Fix crosshair state when logging out with bow equipped.
 namespace CustomizableCamera
-{
+{   
     [HarmonyPatch(typeof(Hud), "UpdateCrosshair")]
     public class Hud_UpdateCrosshair_Patch : CustomizableCamera
     {
@@ -13,17 +13,11 @@ namespace CustomizableCamera
         public static float timeDuration = timeCameraPosDuration.Value;
         public static float timePos = 0; 
 
-        // Position Variables
-        public static Vector3 lastSetCrosshairPos = playerCrosshair.transform.position;
-        public static Vector3 lastSetStealthBarPos = playerStealthBar.transform.position;
-        public static Vector3 targetCrosshairPos = playerCrosshair.transform.position;
-        public static Vector3 targetStealthBarPos = playerStealthBar.transform.position;
-
         public static bool crosshairStateChanged;
         public static characterState crosshairStatePrev = characterState.standing;
         public static characterState crosshairState = characterState.standing;
 
-        public static bool checkLerpDuration(float timeElapsed)
+        private static bool checkLerpDuration(float timeElapsed)
         {
             if (lastSetCrosshairPos == targetCrosshairPos || timeElapsed >= timeDuration)
             {
@@ -36,22 +30,22 @@ namespace CustomizableCamera
             }
         }
 
-        public static void moveToNewCrosshairPosition(float time)
+        private static void moveToNewCrosshairPosition(Hud __instance, float time)
         {
-            playerCrosshair.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
-            playerBowCrosshair.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            __instance.m_crosshair.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            __instance.m_crosshairBow.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
 
-            playerStealthIndicator.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
-            playerStealthIndicatorTargeted.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
-            playerStealthIndicatorAlert.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            __instance.m_hidden.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            __instance.m_targeted.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
+            __instance.m_targetedAlert.transform.position = Vector3.Lerp(lastSetCrosshairPos, targetCrosshairPos, time);
 
-            playerStealthBar.transform.position = Vector3.Lerp(lastSetStealthBarPos, targetStealthBarPos, time);
+            __instance.m_stealthBar.transform.position = Vector3.Lerp(lastSetStealthBarPos, targetStealthBarPos, time);
 
-            lastSetCrosshairPos = playerCrosshair.transform.position;
-            lastSetStealthBarPos = playerStealthBar.transform.position;
+            lastSetCrosshairPos = __instance.m_crosshair.transform.position;
+            lastSetStealthBarPos = __instance.m_crosshairBow.transform.position;
         }
 
-        public static void setTargetPositions()
+        private static void setTargetPositions()
         {
             if (crosshairState == characterState.bowequipped)
             {
@@ -65,7 +59,7 @@ namespace CustomizableCamera
             }
         }
 
-        public static void setCrosshairState()
+        private static void setCrosshairState()
         {
             crosshairStatePrev = crosshairState;
 
@@ -86,7 +80,7 @@ namespace CustomizableCamera
             }
         }
 
-        private static void Postfix(Hud __instance)
+        public static void Postfix(Hud __instance)
         {
             if (!isEnabled.Value || !__instance)
                 return;
@@ -100,9 +94,9 @@ namespace CustomizableCamera
                 if (!targetCrosshairHasBeenReached)
                 {
                     timePos += Time.deltaTime;
-                    moveToNewCrosshairPosition(timePos / timeCameraPosDuration.Value);
+                    moveToNewCrosshairPosition(__instance, timePos / timeCameraPosDuration.Value);
                 }
-            }
+            }          
         }
     }
 }
