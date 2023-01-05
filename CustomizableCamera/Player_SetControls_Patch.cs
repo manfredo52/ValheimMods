@@ -24,7 +24,7 @@ namespace CustomizableCamera
             if (bowZoomEnabled.Value)
             {
                 // Check to make sure if the user is drawing their bow.
-                if (__instance.IsHoldingAttack() && characterEquippedBow)
+                if (__instance.InAttack() && characterEquippedBow) //__instance.IsHoldingAttack()
                 {
                     // Cancel draw key, auto zoom, toggle zoom, or hold zoom
                     if (Input.GetKey(bowCancelDrawKey.Value.MainKey))
