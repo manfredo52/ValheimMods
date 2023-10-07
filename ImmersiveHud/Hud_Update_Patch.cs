@@ -1,11 +1,15 @@
 ﻿using UnityEngine;
 using HarmonyLib;
+using System;
+using System.Reflection;
 
 namespace ImmersiveHud
 {
     [HarmonyPatch(typeof(Hud), "Update")]
     public class Hud_Update_Patch : ImmersiveHud
     {
+        private static MethodInfo _GetRightItemMethod = AccessTools.Method(typeof(Humanoid), "GetRightItem");
+        private static MethodInfo _GetLeftItemMethod = AccessTools.Method(typeof(Humanoid), "GetLeftItem");
         public static void updateHudElementTransparency(HudElement hudElement)
         {
             float lerpedAlpha;
@@ -33,8 +37,8 @@ namespace ImmersiveHud
 
             getPlayerTotalFoodValue(player);
 
-            ItemDrop.ItemData playerItemEquippedLeft = player.GetLeftItem();
-            ItemDrop.ItemData playerItemEquippedRight = player.GetRightItem();
+            ItemDrop.ItemData playerItemEquippedLeft = _GetLeftItemMethod.Invoke(player, Array.Empty<object>()) as ItemDrop.ItemData;
+            ItemDrop.ItemData playerItemEquippedRight = _GetRightItemMethod.Invoke(player, Array.Empty<object>()) as ItemDrop.ItemData;
 
             if (playerItemEquippedLeft != null || playerItemEquippedRight != null)
                 playerHasItemEquipped = true;
