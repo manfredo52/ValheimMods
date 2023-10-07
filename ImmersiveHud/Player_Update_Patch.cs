@@ -1,18 +1,21 @@
 ﻿using UnityEngine;
 using HarmonyLib;
 using System.Reflection;
+using System;
 
 namespace ImmersiveHud
 {
     [HarmonyPatch(typeof(Player), "Update")]
     public class Player_Update_Patch : ImmersiveHud
     {
+        private static MethodInfo _GetRightItemMethod = AccessTools.Method(typeof(Humanoid), "GetRightItem");
+        private static MethodInfo _GetLeftItemMethod = AccessTools.Method(typeof(Humanoid), "GetLeftItem");
         private static void Prefix(Player __instance)
         {
             if (!__instance) return;
 
-            ItemDrop.ItemData playerItemEquippedLeft = __instance.GetLeftItem();
-            ItemDrop.ItemData playerItemEquippedRight = __instance.GetRightItem();
+            ItemDrop.ItemData playerItemEquippedLeft = _GetLeftItemMethod.Invoke(__instance, Array.Empty<object>()) as ItemDrop.ItemData;
+            ItemDrop.ItemData playerItemEquippedRight = _GetRightItemMethod.Invoke(__instance, Array.Empty<object>()) as ItemDrop.ItemData;
 
             if (playerItemEquippedLeft != null && (playerItemEquippedLeft.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Bow))
             {
